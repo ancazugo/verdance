@@ -62,7 +62,7 @@ def run(
     geo_level: str | None = None,
     sub_geo_level: str | None = None,
     geo_code: str | None = None,
-    query_method: str = "rdd",
+    query_method: str = "sql",
     buffer: int = 100,
     tree_area: int = 10,
     tree_height: int = 3,

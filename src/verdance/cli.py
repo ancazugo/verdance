@@ -79,7 +79,7 @@ def run(
     dggs_resolution: Optional[int] = typer.Option(None, "--dggs_resolution", help="Cell resolution for --dggs (h3 0-15, s2 0-30, geohash 1-12, a5 0-30, rhealpix 0-15)"),
     h3_resolution: Optional[int] = typer.Option(None, "--h3_resolution", help="[deprecated] Alias for --dggs h3 --dggs_resolution N"),
     geo_code: Optional[str] = typer.Option(None, "--geo_code", help="Single geography code to process; omit to process all"),
-    query_method: str = typer.Option("rdd", "--query_method", help="Sedona query method: sql or rdd"),
+    query_method: str = typer.Option("sql", "--query_method", help="Sedona join strategy for T3: sql (default; indexed join, counts every building) or rdd (omits buildings with no tree in range)"),
     buffer: int = typer.Option(100, "--buffer", help="Buffer radius in metres around each building (T3, T30_buildings; 0 = footprint only)"),
     tree_area: int = typer.Option(10, "--tree_area", help="Trees count only if canopy area (m²) is strictly greater than this (T3, Visibility)"),
     tree_height: int = typer.Option(3, "--tree_height", help="Trees count only if height (m) is strictly greater than this (T3, Visibility)"),
