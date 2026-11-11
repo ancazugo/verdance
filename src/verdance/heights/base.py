@@ -47,12 +47,21 @@ class HeightSource(ABC):
         return self.spec.label
 
     def cache_key(self) -> str:
-        """Hash of everything that changes this source's heights for given footprints."""
+        """Hash of everything that changes this source's heights for given footprints.
+
+        Only the chain-wide knobs this source actually consumes enter the key, so
+        changing storey_height (used by native floor conversion) or min_overlap
+        (used by vector overlap matching) no longer invalidates unrelated sources'
+        cached downloads.
+        """
         payload = {
             "source": self.spec.source, "options": self.options, "version": self.version,
-            "storey_height": self.cfg.heights.storey_height, "min_overlap": self.cfg.heights.min_overlap,
             "crs": self.cfg.crs,
         }
+        if self.kind == "native":
+            payload["storey_height"] = self.cfg.heights.storey_height
+        if self.kind == "vector":
+            payload["min_overlap"] = self.cfg.heights.min_overlap
         return hashlib.sha1(json.dumps(payload, sort_keys=True, default=str).encode()).hexdigest()[:10]
 
     @abstractmethod

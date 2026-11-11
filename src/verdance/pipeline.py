@@ -113,11 +113,18 @@ def _ensure_edge_lengths(edges_gdf: gpd.GeoDataFrame, source_col: str) -> gpd.Ge
 
 
 def _coerce_null_columns(gdf: gpd.GeoDataFrame) -> gpd.GeoDataFrame:
-    """Cast fully-null columns to string so Spark can infer their types."""
+    """Null out fully-null columns so Spark can accept them (it can't infer a dtype from all-null).
+
+    Both float NaN (which stringifies to "nan") and object/None or pandas <NA>
+    values are mapped to None, so an all-null object column does not leak the
+    literal string "None" into Spark.
+    """
     for col in gdf.columns:
         if gdf[col].isna().all():
             gdf = gdf.copy()
-            gdf[col] = gdf[col].astype(str).replace("nan", None)
+            gdf[col] = gdf[col].astype(str).replace(
+                {"nan": None, "None": None, "NaN": None, "NaT": None, "<NA>": None}
+            )
     return gdf
 
 
@@ -135,7 +142,6 @@ def load_tables(
     """
     logger.debug("Loading tables from config paths")
 
-    col = cfg.columns
     dirs = setup_output_dirs(cfg)
     db_dir = dirs["database"]
 

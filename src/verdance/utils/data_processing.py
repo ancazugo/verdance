@@ -18,6 +18,18 @@ def view_suffix(geo_code: str) -> str:
     return re.sub(r"\W", "_", str(geo_code))
 
 
+def sql_str(value) -> str:
+    """Quote a value as a Spark SQL string literal, safe against quotes in the value.
+
+    Census codes can contain apostrophes (e.g. `L'Hospitalet`, `King's Cross`);
+    interpolating them raw into `WHERE col = '...'` would break or distort the
+    query. Backslash and single quote are both escaped because Spark SQL treats
+    backslash as an escape character in string literals by default.
+    """
+    escaped = str(value).replace("\\", "\\\\").replace("'", "\\'")
+    return f"'{escaped}'"
+
+
 def drop_geo_views(sedona: SparkSession, geo_code: str) -> None:
     """Drop all per-geo temp views created while processing geo_code."""
     sfx = view_suffix(geo_code)
@@ -186,7 +198,7 @@ def filter_buffer_geometries(
         query = f"""
         SELECT b.* FROM buildings b
         JOIN boundaries_buildings_overlay o ON b.building_id = o.building_id
-        WHERE o.{geo_level} = '{geo_code}'
+        WHERE o.{geo_level} = {sql_str(geo_code)}
         """
     else:
         query = f"""
@@ -220,7 +232,7 @@ def get_geometries(sedona: SparkSession, geo_level: str, geo_code: str, dissolve
         f"""
         SELECT {query}
         FROM boundaries
-        WHERE {geo_level} = '{geo_code}'
+        WHERE {geo_level} = {sql_str(geo_code)}
         """
     )
     geo_boundary_sdf.createOrReplaceTempView(f"geo_boundary_{view_suffix(geo_code)}")
@@ -240,7 +252,7 @@ def get_sub_geo_boundaries(
         f"""
         SELECT {sub_geo_level}, ST_Union_Aggr(geometry) AS geometry
         FROM boundaries
-        WHERE {geo_level} = '{geo_code}'
+        WHERE {geo_level} = {sql_str(geo_code)}
         GROUP BY {sub_geo_level}
         """
     )
@@ -250,7 +262,7 @@ def get_sub_geo_boundaries(
         f"""
         SELECT ST_Union_Aggr(geometry) AS geometry
         FROM boundaries
-        WHERE {geo_level} = '{geo_code}'
+        WHERE {geo_level} = {sql_str(geo_code)}
         """
     ).createOrReplaceTempView(f"geo_boundary_{sfx}")
 
@@ -283,6 +295,12 @@ def save_temp_file(spark_df: DataFrame, output_path: Path, coalesce: int = 1, fi
         part_files = list(temp_path.glob(f"part-*.{file_format}*"))
         if not part_files:
             raise FileNotFoundError(f"No part file found with format '{file_format}' in {temp_dir}")
+        if len(part_files) > 1:
+            # moving one part would silently drop the rest; the single-file contract needs coalesce=1
+            raise ValueError(
+                f"save_temp_file expected one part file but Spark wrote {len(part_files)} "
+                f"(coalesce={coalesce}); pass coalesce=1 so no rows are dropped"
+            )
         shutil.move(part_files[0], output_path)
 
     if file_format == "parquet":

@@ -118,7 +118,12 @@ def make_handler(store: TileStore) -> type[BaseHTTPRequestHandler]:
 
 def serve(store: TileStore, host: str = "127.0.0.1", port: int = 8765, open_browser: bool = True) -> None:
     """Serve the dashboard until interrupted."""
-    httpd = ThreadingHTTPServer((host, port), make_handler(store))
+    try:
+        httpd = ThreadingHTTPServer((host, port), make_handler(store))
+    except OSError as e:
+        raise SystemExit(
+            f"viz: cannot bind {host}:{port} ({e}) — choose another with --port, or --port 0 to auto-pick a free one"
+        ) from e
     httpd.daemon_threads = True
     url = f"http://{'localhost' if host in ('127.0.0.1', '0.0.0.0') else host}:{httpd.server_address[1]}/"
     logger.info(f"verdance viz running at {url} (Ctrl+C to stop)")

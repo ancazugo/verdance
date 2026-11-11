@@ -37,7 +37,7 @@ def connect(path: Path | str, read_only: bool = False) -> duckdb.DuckDBPyConnect
     con = duckdb.connect(str(path), read_only=read_only)
     ext_dir = os.environ.get("VERDANCE_DUCKDB_EXTENSIONS")
     if ext_dir:
-        con.execute(f"SET extension_directory = '{ext_dir}'")
+        con.execute(f"SET extension_directory = {_sql_str(ext_dir)}")
     con.execute("INSTALL spatial; LOAD spatial;")
     return con
 

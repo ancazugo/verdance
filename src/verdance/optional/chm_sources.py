@@ -58,6 +58,9 @@ META_VERSIONS = {
 # nodata written into v2 tiles outside the imagery footprints (heights are uint8 metres)
 META_V2_NODATA = 255
 
+# tolerance (fraction of a pixel) for build_vrt's grid-phase alignment check
+_GRID_PHASE_TOL = 0.01
+
 
 # --------------------------------------------------------------------------- #
 # Local tiles
@@ -67,33 +70,42 @@ def raster_index(files_dir: Path, pattern: str, cache_dir: Path) -> gpd.GeoDataF
     """Extents of the rasters under files_dir matching pattern (recursive), cached in cache_dir.
 
     The cache is keyed by directory and pattern and rebuilt when the set of
-    files changes. Bounds are stored in EPSG:4326 for selection; crs keeps
-    each raster's own CRS; unreadable rasters are kept without an extent.
-    Known non-height rasters (Defra VOM hillshades) are skipped.
+    files changes or any file's modification time or size changes (so replacing
+    a tile's contents under the same name is picked up, not served stale).
+    Bounds are stored in EPSG:4326 for selection; crs keeps each raster's own
+    CRS; unreadable rasters are kept without an extent. Known non-height
+    rasters (Defra VOM hillshades) are skipped.
     """
     files = sorted(str(p) for p in Path(files_dir).rglob(pattern) if is_chm_tile(p))
+    stat = {f: Path(f).stat() for f in files}
+    signature = [(f, int(stat[f].st_mtime_ns), int(stat[f].st_size)) for f in files]
     key = hashlib.sha1(f"{Path(files_dir).resolve()}|{pattern}".encode()).hexdigest()[:12]
     cache = Path(cache_dir) / f"raster_index_{key}.parquet"
     if cache.exists():
         idx = gpd.read_parquet(cache)
-        if sorted(idx["path"]) == files:
+        if {"mtime_ns", "size"} <= set(idx.columns) and [
+            (str(p), int(m), int(s)) for p, m, s in zip(idx["path"], idx["mtime_ns"], idx["size"])
+        ] == signature:
             return idx
 
     logger.info(f"Indexing {len(files)} rasters in {files_dir}")
     rows = []
     for f in files:
+        st = stat[f]
+        meta = {"path": f, "mtime_ns": int(st.st_mtime_ns), "size": int(st.st_size)}
         try:
             with rasterio.open(f) as src:
                 rows.append({
-                    "path": f,
+                    **meta,
                     "crs": src.crs.to_string(),
                     "geometry": box(*rasterio.warp.transform_bounds(src.crs, "EPSG:4326", *src.bounds)),
                 })
         except Exception as e:
             # kept with no extent, so the cache still matches the directory listing
             logger.warning(f"Could not read extent of {f}: {e}")
-            rows.append({"path": f, "crs": None, "geometry": None})
-    idx = gpd.GeoDataFrame(rows, columns=["path", "crs", "geometry"], geometry="geometry", crs="EPSG:4326")
+            rows.append({**meta, "crs": None, "geometry": None})
+    idx = gpd.GeoDataFrame(
+        rows, columns=["path", "mtime_ns", "size", "crs", "geometry"], geometry="geometry", crs="EPSG:4326")
     cache.parent.mkdir(parents=True, exist_ok=True)
     idx.to_parquet(cache)
     return idx
@@ -167,7 +179,8 @@ def download_meta_tiles(
             r.raise_for_status()
             size = int(r.headers.get("Content-Length", 0))
             logger.info(f"Downloading Meta CHM {version} tile {qk} ({size / 1e6:.0f} MB)")
-            part = path.with_suffix(".tif.part")
+            # per-process temp name so two runs sharing the cache never write the same .part
+            part = path.with_name(f"{path.name}.{os.getpid()}.part")
             with open(part, "wb") as f:
                 for chunk in r.iter_content(chunk_size=8 << 20):
                     f.write(chunk)
@@ -176,10 +189,10 @@ def download_meta_tiles(
                 raise IOError(f"Incomplete download of Meta CHM tile {qk}")
         if spec["footprints"]:
             footprints = _download_footprints(spec["footprints"].format(quadkey=qk), path.with_suffix(".geojson"))
-            mask_to_footprints(part, footprints, path)
+            mask_to_footprints(part, footprints, path)  # writes path atomically (tmp.replace)
             part.unlink()
         else:
-            part.rename(path)
+            part.replace(path)  # atomic rename onto the final path
         ensure_tiled(path)
         paths.append(str(path))
     return paths
@@ -294,6 +307,14 @@ def build_vrt(paths: list[str], vrt_path: Path, extent: tuple | None = None) -> 
             raise ValueError(f"{p} has CRS {crs}, expected {crs0}; CHM tiles must share one CRS")
         if not (math.isclose(t.a, res_x, rel_tol=1e-6) and math.isclose(-t.e, res_y, rel_tol=1e-6)):
             raise ValueError(f"{p} has pixel size {t.a} x {-t.e}, expected {res_x} x {res_y}")
+        # origins must differ by a whole number of pixels, else DstRect rounding silently
+        # snaps the tile onto the shared grid (sub-pixel shift). Warn, don't hard-fail.
+        off_x, off_y = (t.c - t0.c) / res_x, (t.f - t0.f) / res_y
+        if abs(off_x - round(off_x)) > _GRID_PHASE_TOL or abs(off_y - round(off_y)) > _GRID_PHASE_TOL:
+            logger.warning(
+                f"{p} origin ({t.c}, {t.f}) is off the pixel grid of {infos[0][0]} by "
+                f"({off_x - round(off_x):+.3f}, {off_y - round(off_y):+.3f}) px; it will be snapped to the grid"
+            )
 
     if extent is not None:
         minx, miny, maxx, maxy = extent

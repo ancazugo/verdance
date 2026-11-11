@@ -16,7 +16,6 @@ single-band canopy-height ImageCollection.
 import math
 from pathlib import Path
 
-import ee
 import affine
 import xarray as xr
 import rioxarray as rxr
@@ -55,6 +54,8 @@ def download_binary_canopy(
     if cache_path is not None and cache_path.exists() and not overwrite:
         logger.debug(f"Using cached GEE canopy raster {cache_path}")
         return rxr.open_rasterio(cache_path, masked=True)
+
+    import ee  # GEE-only; imported here so the module loads without the earthengine stack
 
     ensure_gee(cfg.gee_project)
     logger.info(f"Downloading GEE canopy mask from {cfg.data.canopy_height_ee_path} at {scale} m")

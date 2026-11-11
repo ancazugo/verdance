@@ -5,6 +5,7 @@ and each module falls back to its per-geo CSVs so the map works before Merge
 has run. Nothing here touches DuckDB.
 """
 
+import csv
 import re
 from dataclasses import dataclass, field, replace
 from pathlib import Path
@@ -222,8 +223,8 @@ def _codes(directory: Path, prefix: str, suffix: str) -> list[str]:
 
 def _csv_header(path: str) -> list[str]:
     first = _expand(path)[0]
-    with open(first) as f:
-        return f.readline().strip().split(",")
+    with open(first, newline="") as f:
+        return next(csv.reader(f))
 
 
 def _parquet_columns(path: Path) -> list[str]:
@@ -233,7 +234,16 @@ def _parquet_columns(path: Path) -> list[str]:
 
 
 def _columns(src_path: str, fmt: str) -> list[str]:
-    return _parquet_columns(Path(src_path)) if fmt == "parquet" else _csv_header(src_path)
+    if fmt == "parquet":
+        return _parquet_columns(Path(src_path))
+    # the store reads a CSV glob with union_by_name = true, so a column present only in a
+    # later file still matters; union the headers across all files, keeping first-seen order
+    seen: list[str] = []
+    for file in _expand(src_path):
+        for col in _csv_header(str(file)):
+            if col not in seen:
+                seen.append(col)
+    return seen
 
 
 def _building_sources(cfg: VerdanceConfig, base: Path, db: Path) -> list[Source]:

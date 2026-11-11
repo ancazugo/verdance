@@ -95,3 +95,31 @@ include = [
 
 [tool.pytest.ini_options]
 testpaths = ["tests"]
+markers = [
+    "slow: slow tests",
+    "spark: needs a Spark session",
+    "network: needs network access",
+]
+
+[tool.ruff]
+# Conservative config chosen so the existing code passes `ruff check` without
+# being reformatted. `line-length` is generous because some lines are long, and
+# only pyflakes (`F`) is enforced. isort (`I`) is intentionally left out: import
+# blocks across many files are unsorted, so enabling it would require a repo-wide
+# reformat. To adopt import sorting and formatting later, run `ruff check --fix`
+# and `ruff format` in a dedicated commit, then add `"I"` here.
+line-length = 160
+target-version = "py312"
+
+[tool.ruff.lint]
+select = ["F"]
+
+[tool.ruff.lint.per-file-ignores]
+# Re-exports in package __init__ files are not "unused imports".
+"__init__.py" = ["F401"]
+
+[tool.mypy]
+# Advisory only: mypy is not run in CI. Kept lenient so it never blocks.
+python_version = "3.12"
+ignore_missing_imports = true
+warn_unused_ignores = false

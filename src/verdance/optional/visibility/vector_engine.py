@@ -33,7 +33,9 @@ from .params import VisibilityParams
 from .raster_engine import CROWN_MARGIN, OUTPUT_COLUMNS, load_trees, target_mask
 from .targets import crown_polygons, tree_targets
 
-# Inputs are loaded once per (config, overlay) and reused across geo codes
+# Inputs are loaded once per (config, overlay) and reused across geo codes. Capped
+# at a single entry: a session spanning several configs keeps only the current one's
+# arrays, rather than accumulating every config's inputs in memory.
 _INPUTS: dict = {}
 _NO_OBSTACLE = -1e30
 
@@ -41,6 +43,7 @@ _NO_OBSTACLE = -1e30
 def _inputs(cfg: VerdanceConfig, overlay_path: Path | None) -> VisibilityInputs:
     key = (cfg.output.base_dir, str(overlay_path))
     if key not in _INPUTS:
+        _INPUTS.clear()  # evict the previous config's inputs before loading a new one
         _INPUTS[key] = VisibilityInputs.load(cfg, overlay_path)
     return _INPUTS[key]
 

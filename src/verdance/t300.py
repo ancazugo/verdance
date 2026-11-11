@@ -10,7 +10,7 @@ from pyspark.sql.session import SparkSession
 
 from .config.schema import VerdanceConfig
 from .pipeline import _filter_parks, _filter_park_access
-from .utils.data_processing import filter_buffer_geometries, get_geometries, drop_geo_views
+from .utils.data_processing import filter_buffer_geometries, get_geometries, drop_geo_views, sql_str
 
 
 def filter_features(
@@ -234,7 +234,7 @@ def process_geo_code(
             f"""
             SELECT building_id, {sub_geo_level}
             FROM boundaries_buildings_overlay
-            WHERE {geo_level} = '{geo_code}'
+            WHERE {geo_level} = {sql_str(geo_code)}
             """
         ).toPandas()
         # ids may be numeric in file-backed sources while views return strings

@@ -6,19 +6,23 @@ Requires gee_project and gee_boundaries_asset in config.
 import time
 from loguru import logger
 from pathlib import Path
+from typing import TYPE_CHECKING
 
-import ee
 import pandas as pd
 
-from ..utils.constants import GEE_PROJECT_NAME
+if TYPE_CHECKING:
+    import ee
 
 
 def setup_gee(project: str | None = None) -> None:
-    """Authenticate and initialise Google Earth Engine (defaults to GEE_PROJECT_NAME from .env)."""
-    project = project or GEE_PROJECT_NAME
-    logger.debug(f"Initializing GEE for project: {project}")
-    ee.Authenticate()
-    ee.Initialize(project=project, opt_url="https://earthengine-highvolume.googleapis.com")
+    """Initialise Google Earth Engine (defaults to GEE_PROJECT_NAME from .env).
+
+    Thin wrapper over verdance.utils.gee.ensure_gee so core code no longer
+    depends on this optional module; both share the once-per-process guard.
+    """
+    from ..utils.gee import ensure_gee
+
+    ensure_gee(project)
 
 
 def get_imagery(
@@ -40,8 +44,9 @@ def get_imagery(
     if composite not in ("max", "median"):
         raise ValueError(f"composite must be 'max' or 'median', got {composite!r}")
     logger.debug("Querying GEE for imagery")
-    union_geom = geo_level_filt_fc.union().geometry()
+    import ee
     import eemont  # noqa: F401 — registers .spectralIndices() on ee.ImageCollection
+    union_geom = geo_level_filt_fc.union().geometry()
     collection = (
         ee.ImageCollection(imagery_ee_path)
         .filterDate(start_date, end_date)
@@ -60,6 +65,8 @@ def calculate_median_index(
     tile_scale: int = 4,
 ) -> "ee.FeatureCollection":
     """Reduce the index image to the median value per feature geometry."""
+    import ee
+
     return imagery_ic.reduceRegions(
         collection=geometries,
         reducer=ee.Reducer.median(),
@@ -99,6 +106,8 @@ def process_geo_code(
         return pd.read_csv(out_path)
 
     try:
+        import ee
+
         boundaries_fc = ee.FeatureCollection(gee_boundaries_asset)
         filt_fc = boundaries_fc.filter(ee.Filter.eq(geo_level, geo_code))
         sub_values = filt_fc.aggregate_array(sub_geo_level).distinct()

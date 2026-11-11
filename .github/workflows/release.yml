@@ -1,0 +1,72 @@
+name: Release
+
+# Builds the sdist + wheel and publishes to PyPI when a version tag is pushed.
+#
+# Publishing uses PyPI Trusted Publishing (OpenID Connect) — no API token is
+# stored in the repository. Before the first tagged release, a maintainer must
+# configure the Trusted Publisher once on PyPI:
+#   PyPI project:  verdance
+#   Owner:         sdgresearch        (GitHub org that owns the repo)
+#   Repository:    verdance
+#   Workflow:      release.yml
+#   Environment:   pypi
+# See https://docs.pypi.org/trusted-publishers/ for the exact steps.
+#
+# Cut a release by pushing an annotated tag that matches v* on a commit whose
+# src/verdance/__init__.py __version__ matches, e.g.:
+#   git tag -a v0.3.1 -m "verdance 0.3.1" && git push origin v0.3.1
+
+on:
+  push:
+    tags:
+      - "v*"
+
+permissions:
+  contents: read
+
+jobs:
+  build:
+    name: Build distributions
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Install uv
+        uses: astral-sh/setup-uv@v4
+
+      - name: Build sdist and wheel
+        run: uv build
+
+      - name: Check distribution metadata
+        run: uvx twine check --strict dist/*
+
+      - name: Upload dist artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: dist
+          path: dist/
+          if-no-files-found: error
+
+  publish:
+    name: Publish to PyPI
+    needs: build
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    # The Trusted Publisher on PyPI is scoped to this environment.
+    environment:
+      name: pypi
+      url: https://pypi.org/project/verdance/
+    permissions:
+      # Required for Trusted Publishing (OIDC token exchange with PyPI).
+      id-token: write
+    steps:
+      - name: Download dist artifact
+        uses: actions/download-artifact@v4
+        with:
+          name: dist
+          path: dist/
+
+      - name: Publish to PyPI
+        uses: pypa/gh-action-pypi-publish@release/v1
