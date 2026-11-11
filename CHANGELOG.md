@@ -30,6 +30,26 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   initialisation fails with a clear "run `earthengine authenticate`" message
   instead of blocking on an interactive flow.
 
+### Performance
+
+Validated against a full England run (23.9M buildings, 308 districts):
+
+- T3's SQL path no longer degenerates into a nested loop. A `LEFT JOIN` on
+  `ST_Intersects` cannot use a spatial index, so Sedona compared every
+  building–tree pair; it now uses an inner spatial join plus a zero-fill.
+  On one district (46k buildings x 68k trees) this cut the join from **1156 s
+  to 3.4 s (~340x)** with byte-identical output — same rows, same tree total.
+- `load_tables` only reads the road and park datasets for T300, the one module
+  that uses them (`load_roads_parks`). For England that skips **898 MB of the
+  1,887 MB** it previously read for every module, plus registering two Spark
+  views built from 483k park features that nothing queried.
+- T300 takes the already-filtered parks from `load_tables` instead of re-reading
+  and re-filtering them once per geo code — 308 redundant passes over the parks
+  datasets on an England run.
+- `binarise_tiles` no longer forces every CHM tile fully resident before merging
+  them, roughly halving peak memory; English districts reach 244 overlapping
+  1 m tiles (median 18, p90 60) at ~95 MB each.
+
 ### Fixed
 
 - Census codes containing quotes (e.g. `L'Hospitalet`) are now escaped in every

@@ -42,14 +42,27 @@ def binarise_tiles(
     for file in chm_paths_lst:
         try:
             temp_rast = rxr.open_rasterio(file, masked=True)
-            temp_rast.values
+            # probe a single pixel so an unreadable tile is caught and named here,
+            # without forcing the whole tile resident: a full `.values` per tile held
+            # every tile in memory at once on top of the mosaic merge_arrays then
+            # builds. Defra VOM tiles are 5000x5000 at 1 m, so one is ~95 MB (float32)
+            # and English districts reach 244 overlapping tiles (median 18, p90 60).
+            temp_rast[0, :1, :1].values
             chm_xr_lst.append(temp_rast)
         except Exception as e:
             logger.error(f"Error reading {file}: {e}")
 
     if not chm_xr_lst:
         raise FileNotFoundError("No readable CHM tiles overlap the boundary")
-    merged_chm_xr = merge_arrays(chm_xr_lst, method="last" if overlap == "latest" else "max")
+    try:
+        merged_chm_xr = merge_arrays(chm_xr_lst, method="last" if overlap == "latest" else "max")
+    except Exception as e:
+        # the mosaic is still one driver-side array; a district with hundreds of
+        # tiles can exhaust memory here even though the tiles load lazily
+        raise MemoryError(
+            f"Could not merge {len(chm_xr_lst)} CHM tiles into one mosaic ({e}). "
+            "Process a smaller geo_level, or raise SPARK_DRIVER_MEMORY."
+        ) from e
     if target_crs is not None and merged_chm_xr.rio.crs is not None:
         from pyproj import CRS as ProjCRS
         if merged_chm_xr.rio.crs != ProjCRS.from_user_input(target_crs):

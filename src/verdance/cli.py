@@ -228,7 +228,8 @@ def run(
             typer.echo("Error: Spectral requires gee_boundaries_asset in the config", err=True)
             raise typer.Exit(1)
         sedona = get_spark()
-        tables = load_tables(sedona, cfg)
+        # Spectral aggregates on a GEE boundaries asset: no roads or parks needed
+        tables = load_tables(sedona, cfg, load_roads_parks=False)
         setup_gee(cfg.gee_project)
         spectral_geo_level = geo_level or geo_levels[0]
         codes = [geo_code] if geo_code else tables["census_boundaries_gdf"][spectral_geo_level].unique()
@@ -245,7 +246,9 @@ def run(
         return
 
     sedona = get_spark()
-    tables = load_tables(sedona, cfg, dggs=dggs, dggs_resolution=dggs_resolution)
+    # only T300 walks the road network and parks; the rest skip ~900 MB of reads
+    tables = load_tables(sedona, cfg, dggs=dggs, dggs_resolution=dggs_resolution,
+                         load_roads_parks=(process == "T300"))
     dirs = tables["output_dirs"]
 
     output_dir_map = {"T3": dirs["t3"], "T30": dirs["t30"], "T30_buildings": dirs["t30_buildings"], "T300": dirs["t300"], "Tree_count": dirs["tree_count"], "Visibility": dirs["visibility_vector"]}
@@ -271,6 +274,10 @@ def run(
         "overwrite": overwrite,
         "road_nodes_gdf": tables.get("road_nodes_gdf"),
         "road_edges_gdf": tables.get("road_edges_gdf"),
+        # already filtered by load_tables; passing them keeps T300 from re-reading
+        # and re-filtering the parks datasets once per geo code
+        "parks_sites_gdf": tables.get("parks_sites_gdf"),
+        "parks_access_gdf": tables.get("parks_access_gdf"),
     }
 
     _warn_ignored_flags(process)

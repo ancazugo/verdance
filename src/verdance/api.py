@@ -118,7 +118,9 @@ def run(
             rule_distance=rule_distance, rule_t3_metric=rule_t3_metric,
         )
 
-    tables = load_tables(sedona, cfg, dggs=dggs, dggs_resolution=dggs_resolution)
+    # only T300 walks the road network and parks; the rest skip ~900 MB of reads
+    tables = load_tables(sedona, cfg, dggs=dggs, dggs_resolution=dggs_resolution,
+                         load_roads_parks=(process == "T300"))
     dirs = tables["output_dirs"]
     gl = geo_level or geo_levels[0]
     sgl = sub_geo_level or (geo_levels[-1] if len(geo_levels) > 1 else geo_levels[0])
@@ -136,6 +138,10 @@ def run(
         "low_threshold": low_threshold, "high_threshold": high_threshold, "gee_scale": gee_scale,
         "overwrite": overwrite, "road_nodes_gdf": tables.get("road_nodes_gdf"),
         "road_edges_gdf": tables.get("road_edges_gdf"),
+        # already filtered by load_tables; passing them keeps T300 from re-reading
+        # and re-filtering the parks datasets once per geo code
+        "parks_sites_gdf": tables.get("parks_sites_gdf"),
+        "parks_access_gdf": tables.get("parks_access_gdf"),
     }
     codes = list([geo_code] if geo_code else tables["census_boundaries_gdf"][gl].unique())
     start = time.time()
