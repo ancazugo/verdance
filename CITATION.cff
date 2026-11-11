@@ -1,0 +1,24 @@
+cff-version: 1.2.0
+message: "If you use verdance, please cite it using these metadata."
+title: verdance
+abstract: "Measure the 3-30-300 rule of urban greening for any city, using Apache Sedona."
+type: software
+authors:
+  - family-names: "Zúñiga-González"
+    given-names: "Andrés Camilo"
+license: MIT
+repository-code: "https://github.com/sdgresearch/verdance"
+url: "https://github.com/sdgresearch/verdance"
+version: 0.3.0
+date-released: "2026-11-10"
+keywords:
+  - urban-greening
+  - 3-30-300
+  - urban-forest
+  - tree-canopy
+  - green-space
+  - apache-sedona
+  - gis
+  - geospatial
+# A Zenodo DOI can be minted later and added here as `doi:` (and under
+# `identifiers:`) so releases are citable with a persistent identifier.
