@@ -40,11 +40,19 @@ def meta_binary_canopy(
     """Canopy mask over the boundary as a (band, y, x) DataArray in cfg.crs.
 
     Canopy pixels (height in [low_threshold, high_threshold]) are 1, other
-    mapped pixels 0, unmapped pixels NaN (tile nodata, including v2 pixels
-    outside the imagery footprints) — the nodata semantics of
-    t30.binarise_tiles. Binarised before reprojection (nearest neighbour), so
-    no height is ever interpolated. When cache_path is given the mask is
+    mapped pixels 0, unmapped pixels NaN (tile nodata) — the nodata semantics
+    of t30.binarise_tiles. Binarised before reprojection (nearest neighbour),
+    so no height is ever interpolated. When cache_path is given the mask is
     cached as GeoTIFF and reused if overwrite is False.
+
+    The NaN case only exists for v2, whose tiles this package masks to the
+    imagery footprints on download (nodata 255). v1 tiles declare no nodata and
+    ship no footprints, so an unimaged v1 pixel reads 0 and is counted as
+    mapped-but-treeless, deflating cover where imagery is missing.
+
+    Unlike t30.binarise_tiles, this reads only the boundary window out of a VRT
+    over the tiles, because a Meta tile is 32768x32768 (v2) or 65536x65536 (v1)
+    pixels — 8-32 GB if it were ever materialised whole.
     """
     if cache_path is not None and cache_path.exists() and not overwrite:
         logger.debug(f"Using cached Meta canopy raster {cache_path}")

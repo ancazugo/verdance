@@ -23,6 +23,17 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Changed
 
+- `--query_method` defaults to `sql` instead of `rdd`. With the join fixed,
+  `sql` is both faster (47 s vs 74 s on the London region) and complete: it
+  returns a row for every building, where `rdd` omits those with no tree in
+  range (4.5% of London). Merged totals are unchanged — `Merge` zero-filled
+  those rows already — but the per-geo T3 CSVs are now complete on their own.
+- `binarise_tiles` refuses a CHM mosaic bigger than RAM with a message naming
+  the likely cause, instead of being out-of-memory killed. It builds the mosaic
+  in driver memory, which suits small survey tiles (Defra VOM: 5000x5000) but
+  not globally-tiled models — one Meta/WRI tile is 32768² (v2) or 65536² (v1)
+  pixels, i.e. 8–32 GB alone; those belong to `data.meta_chm`, which reads only
+  the boundary window.
 - The local Spark master is now `local[*]` by default and overridable via
   `VERDANCE_SPARK_MASTER` (was a fixed `local[10,0]`). Unused PostGIS/JDBC jars
   are no longer downloaded on first run.
