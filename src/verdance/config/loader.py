@@ -1,3 +1,4 @@
+from dataclasses import fields
 from pathlib import Path
 
 import yaml
@@ -27,17 +28,31 @@ from .schema import (
 VALID_NETWORK_TYPES = {"walk", "bike", "drive", "drive_service", "all", "all_public"}
 
 
+def _reject_unknown(section: dict, valid: set[str], where: str) -> None:
+    """Raise if a config section has keys outside `valid` — catches typos like `contex_buffer`."""
+    unknown = set(section) - valid
+    if unknown:
+        raise ValueError(f"Unknown {where} keys {sorted(unknown)}; expected some of {sorted(valid)}")
+
+
 def load_config(path: str | Path) -> VerdanceConfig:
     with open(path) as f:
         raw = yaml.safe_load(f)
 
+    if not isinstance(raw, dict):
+        kind = "empty" if raw is None else f"a {type(raw).__name__}"
+        raise ValueError(f"Config file {path} is {kind}; expected a YAML mapping of settings")
+
     _require(raw, "study_area_name", "crs", "data", "columns", "output")
+    _reject_unknown(raw, {f.name for f in fields(VerdanceConfig)}, "top-level config")
 
     data_raw = raw["data"]
     _require_section(data_raw, "data", "buildings", "parks_sites", "parks_access", "roads", "census_boundaries")
+    _reject_unknown(data_raw, {f.name for f in fields(DataPaths)}, "data")
 
     columns_raw = raw["columns"]
     _require_section(columns_raw, "columns", "geo_levels")
+    _reject_unknown(columns_raw, {f.name for f in fields(ColumnMapping)}, "columns")
     if not columns_raw.get("geo_levels"):
         raise ValueError("columns.geo_levels must be a non-empty list")
     if building_source(data_raw["buildings"]) is None and not columns_raw.get("building_id"):
@@ -57,14 +72,20 @@ def load_config(path: str | Path) -> VerdanceConfig:
 
     output_raw = raw["output"]
     _require_section(output_raw, "output", "base_dir")
+    _reject_unknown(output_raw, {f.name for f in fields(OutputPaths)}, "output")
 
     tile_raw = raw.get("tile_system", {})
 
     try:
         from pyproj import CRS
-        CRS.from_user_input(raw["crs"])
+        crs_obj = CRS.from_user_input(raw["crs"])
     except Exception as e:
         raise ValueError(f"Invalid CRS '{raw['crs']}': {e}")
+    if crs_obj.is_geographic:
+        raise ValueError(
+            f"crs '{raw['crs']}' is geographic (degrees). verdance measures areas in m² and buffers in "
+            "metres, so a projected/metric CRS is required — e.g. the local UTM zone or a national grid."
+        )
 
     dggs, dggs_resolution = _parse_dggs(raw)
 
@@ -223,6 +244,7 @@ def _validate_osm_sources(data_raw: dict, columns_raw: dict) -> None:
 
 
 def _parse_osm_section(osm_raw: dict) -> OSMConfig:
+    _reject_unknown(osm_raw, {f.name for f in fields(OSMConfig)}, "osm")
     network_type = osm_raw.get("network_type", "walk")
     if network_type not in VALID_NETWORK_TYPES:
         raise ValueError(f"osm.network_type must be one of {sorted(VALID_NETWORK_TYPES)}, got {network_type!r}")
@@ -259,6 +281,7 @@ def _parse_overture_section(ov_raw: dict) -> OvertureConfig:
 
 
 def _parse_open_buildings_section(ob_raw: dict) -> OpenBuildingsConfig:
+    _reject_unknown(ob_raw, {f.name for f in fields(OpenBuildingsConfig)}, "open_buildings")
     confidence_threshold = ob_raw.get("confidence_threshold", 0.7)
     if not isinstance(confidence_threshold, (int, float)) or not (0 <= confidence_threshold < 1):
         raise ValueError(

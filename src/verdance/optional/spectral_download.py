@@ -3,12 +3,20 @@ Download GEE imagery to Google Drive (optional module).
 """
 
 import time
+from typing import TYPE_CHECKING
+
 from loguru import logger
 
-import ee  # eemont imported lazily inside get_imagery()
+if TYPE_CHECKING:
+    import ee
 
 
-def download_imagery(imagery_ic: "ee.Image", output_path: str) -> None:
+def download_imagery(
+    imagery_ic: "ee.Image", output_path: str, poll_s: int = 30, timeout_s: float = 7200,
+) -> None:
+    """Export imagery to Google Drive, polling until it finishes or `timeout_s` elapses."""
+    import ee
+
     logger.debug(f"Downloading imagery to Google Drive: {output_path}")
 
     task = ee.batch.Export.image.toDrive(
@@ -24,9 +32,13 @@ def download_imagery(imagery_ic: "ee.Image", output_path: str) -> None:
     task.start()
 
     logger.info("Export task started. Waiting for completion...")
+    deadline = time.time() + timeout_s
     while task.status()["state"] in ["READY", "RUNNING"]:
+        if time.time() > deadline:
+            task.cancel()
+            raise TimeoutError(f"GEE export did not finish within {timeout_s:.0f}s (last state: {task.status()['state']})")
         logger.info(f"Task status: {task.status()['state']}")
-        time.sleep(30)
+        time.sleep(poll_s)
 
     if task.status()["state"] == "COMPLETED":
         logger.info("Download completed successfully!")
@@ -43,6 +55,7 @@ def process_gee(
     boundary_fc: "ee.FeatureCollection | None" = None,
     boundary_asset: str | None = None,
     adm0_name: str | None = None,
+    project: str | None = None,
 ) -> None:
     """
     Download spectral imagery for a given boundary.
@@ -51,9 +64,14 @@ def process_gee(
     - a pre-built ee.FeatureCollection (boundary_fc)
     - a GEE asset path (boundary_asset)
     - a country name from FAO/GAUL dataset (adm0_name)
+
+    `project` sets the Earth Engine Cloud project (defaults to GEE_PROJECT_NAME).
     """
-    from .spectral import setup_gee, get_imagery
-    setup_gee()
+    import ee
+
+    from .spectral import get_imagery, setup_gee
+
+    setup_gee(project)
 
     if boundary_fc is None:
         if boundary_asset:

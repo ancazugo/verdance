@@ -36,6 +36,12 @@ from ..utils.cache import cache_dir_for
 
 _EPS = 1e-8
 
+# Assumed tallest plausible tree (m), used by halo_metres to bound the "linear"
+# local-maximum window when no window cap is known. A config whose ws_slope implies
+# taller trees would under-halo (window radius underestimated at block edges), so the
+# assumption is named here to be discoverable rather than buried as a literal.
+MAX_TREE_HEIGHT_M = 100.0
+
 
 @dataclass(frozen=True)
 class SegmentationParams:
@@ -352,10 +358,11 @@ def halo_metres(p: SegmentationParams, cap: float | None) -> float:
 
     Smoothing radius + the largest window radius (treetop test) + two crown
     extents (a core crown and the neighbouring crowns competing with it).
-    Without a cap the largest window the function can return is assumed.
+    Without a cap the largest window the function can return is assumed, which
+    for the "linear" window means evaluating it at MAX_TREE_HEIGHT_M.
     """
     if cap is None:
-        cap = p.ws_base + p.ws_amp if p.window == "gaussian" else p.ws_intercept + p.ws_slope * 100
+        cap = p.ws_base + p.ws_amp if p.window == "gaussian" else p.ws_intercept + p.ws_slope * MAX_TREE_HEIGHT_M
     smooth = 0.0 if p.smoothing == "none" else (p.smooth_size / 2 if p.smoothing == "median" else 4 * p.smooth_size)
     return smooth + cap / 2 + 2 * p.max_cr + 2
 

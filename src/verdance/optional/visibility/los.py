@@ -24,7 +24,7 @@ import numpy as np
 from numba import njit, prange
 
 
-@njit(cache=False, inline="always")
+@njit(cache=True, inline="always")
 def _in_crown(crown_id, j, i, tid):
     for k in range(crown_id.shape[0]):
         if crown_id[k, j, i] == tid + 1:
@@ -32,7 +32,7 @@ def _in_crown(crown_id, j, i, tid):
     return False
 
 
-@njit(cache=False, inline="always")
+@njit(cache=True, inline="always")
 def _ray_zreq(dsm, bldg, crown_id, x0, y0, res, ox, oy, tx, ty, tz, tid, skip0, skip1, best, skip_ground):
     """Required observer elevation for one ray, stopping early once it reaches `best` (returns >= best then).
 
@@ -123,7 +123,7 @@ def pair_min_eye_height(
     )
 
 
-@njit(parallel=True, cache=False)
+@njit(parallel=True, cache=True)
 def _pair_kernel(
     dsm, bldg, crown_id, x0, y0, res,
     ox, oy, onx, ony, ob_start, ob_count,

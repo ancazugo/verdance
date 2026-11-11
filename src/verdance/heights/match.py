@@ -107,7 +107,8 @@ def zonal_heights(
         fps = footprints.to_crs(src.crs) if footprints.crs is not None and src.crs is not None else footprints
         transform, nodata = src.transform, src.nodata
         res = abs(transform.a)
-        res_m = res * _metres_per_unit(src.crs)
+        mid_lat = (src.bounds.bottom + src.bounds.top) / 2  # ignored for projected CRSs
+        res_m = res * _metres_per_unit(src.crs, latitude=mid_lat)
         geoms = fps.geometry.values
         b = shapely.bounds(geoms)
         # group footprints by the block their bounds' centre falls in
@@ -177,14 +178,22 @@ def _zonal_block(geoms, values, transform, shape, stat, all_touched) -> tuple[np
     return h, share
 
 
-def _metres_per_unit(crs) -> float:
-    """Ground metres per CRS unit (1 for metric CRSs; ~111 km at the equator for degrees)."""
+def _metres_per_unit(crs, latitude: float | None = None) -> float:
+    """Ground metres per CRS unit (1 for metric CRSs; ~111 km per degree for geographic).
+
+    For a geographic CRS the east-west metres per degree shrink with latitude
+    (~half at 60°), so when a latitude is given it scales the equatorial value by
+    cos(latitude); without one it falls back to the equatorial figure.
+    """
     if crs is None:
         return 1.0
     from pyproj import CRS
     c = CRS.from_user_input(crs)
     if c.is_geographic:
-        return 111_320.0
+        if latitude is None:
+            return 111_320.0
+        import math
+        return 111_320.0 * max(math.cos(math.radians(latitude)), 1e-6)
     unit = c.axis_info[0].unit_conversion_factor if c.axis_info else 1.0
     return float(unit) if unit else 1.0
 

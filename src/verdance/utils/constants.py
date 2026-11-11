@@ -3,8 +3,11 @@ from pathlib import Path
 
 from dotenv import find_dotenv, load_dotenv
 
-# .env in the working directory or a parent of it; variables already set in the environment win
-load_dotenv(find_dotenv(usecwd=True))
+# .env in the working directory or a parent of it; variables already set in the environment win.
+# Set VERDANCE_NO_DOTENV=1 to skip this — for apps embedding verdance that manage their own env
+# and don't want an implicit .env search from the current working directory.
+if os.getenv("VERDANCE_NO_DOTENV", "").strip().lower() not in ("1", "true", "yes"):
+    load_dotenv(find_dotenv(usecwd=True))
 
 GEE_PROJECT_NAME = os.getenv("GEE_PROJECT_NAME", "")
 

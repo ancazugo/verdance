@@ -52,6 +52,10 @@ def get_spark() -> SparkSession:
 
     driver_mem = os.getenv("SPARK_DRIVER_MEMORY") or _default_driver_memory()
     executor_mem = os.getenv("SPARK_EXECUTOR_MEMORY", "32g")
+    # Local master: all cores by default, overridable for small laptops or big servers
+    # (e.g. VERDANCE_SPARK_MASTER="local[4]"). The old fixed "local[10,0]" oversubscribed
+    # small machines and wasted most cores on large ones.
+    master = os.getenv("VERDANCE_SPARK_MASTER") or os.getenv("SPARK_MASTER") or "local[*]"
     tmp = Path(tempfile.gettempdir())
 
     builder = (
@@ -59,10 +63,7 @@ def get_spark() -> SparkSession:
         .config(
             "spark.jars.packages",
             "org.apache.sedona:sedona-spark-shaded-3.5_2.12:1.9.0,"
-            "org.datasyslab:geotools-wrapper:1.9.0-33.5,"
-            "net.postgis:postgis-jdbc:2021.1.0,"
-            "net.postgis:postgis-geometry:2021.1.0,"
-            "org.postgresql:postgresql:42.5.4",
+            "org.datasyslab:geotools-wrapper:1.9.0-33.5",
         )
         .config(
             "spark.jars.repositories",
@@ -77,7 +78,7 @@ def get_spark() -> SparkSession:
         # keep Spark's files out of the working directory
         .config("spark.driver.extraJavaOptions", f"-Djava.io.tmpdir={tmp}")
         .config("spark.sql.warehouse.dir", str(tmp / f"verdance-{_user()}" / "spark-warehouse"))
-        .master("local[10,0]")
+        .master(master)
     )
     if ivy := os.getenv("VERDANCE_IVY_DIR"):
         builder = builder.config("spark.jars.ivy", ivy)

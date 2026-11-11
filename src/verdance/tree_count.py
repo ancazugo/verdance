@@ -8,7 +8,7 @@ from pyspark.sql.functions import monotonically_increasing_id
 from pyspark.sql.session import SparkSession
 
 from .config.schema import VerdanceConfig
-from .utils.data_processing import save_temp_file, get_geometries, load_trees_gdf, view_suffix, drop_geo_views
+from .utils.data_processing import save_temp_file, get_geometries, load_trees_gdf, sql_str, view_suffix, drop_geo_views
 from .utils.sedona_rdd import create_spatial_rdds, count_trees_rdd
 
 
@@ -63,7 +63,7 @@ def process_geo_code(
 
     try:
         sub_geo_sdf = sedona.sql(
-            f"""SELECT {sub_geo_level}, geometry FROM boundaries WHERE {geo_level} = '{geo_code}'"""
+            f"""SELECT {sub_geo_level}, geometry FROM boundaries WHERE {geo_level} = {sql_str(geo_code)}"""
         )
 
         geo_boundary_sdf = get_geometries(sedona, geo_level, geo_code, dissolve=True)

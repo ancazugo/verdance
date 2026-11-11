@@ -9,6 +9,7 @@ its own parquet so an interrupted fetch resumes where it stopped.
 
 import hashlib
 import json
+import time
 from concurrent.futures import ThreadPoolExecutor
 from pathlib import Path
 
@@ -25,6 +26,37 @@ from .match import grid_chunks
 
 # Pixels per tile side for raster downloads (4096 px x 4 B = 64 MB per tile)
 TILE_PX = 4096
+
+
+def _is_transient(error: Exception) -> bool:
+    """True for GEE/HTTP errors worth retrying (rate limits, timeouts, 5xx, backend blips)."""
+    msg = str(error).lower()
+    return any(s in msg for s in (
+        "429", "500", "502", "503", "504", "rate limit", "quota", "timeout", "timed out",
+        "deadline", "unavailable", "temporar", "internal error", "backend error", "try again",
+    ))
+
+
+def _is_too_large(error: Exception) -> bool:
+    """True for GEE errors meaning the request must be split (payload/element limits), not retried."""
+    msg = str(error).lower()
+    return any(s in msg for s in (
+        "too large", "payload size", "request size", "exceeds", "exceeded", "too many",
+        "accumulating over", "user memory limit",
+    ))
+
+
+def _with_retry(fn, *, what: str, attempts: int = 4, base_delay: float = 2.0):
+    """Call fn(), retrying transient GEE errors with exponential backoff; other errors propagate."""
+    for attempt in range(attempts):
+        try:
+            return fn()
+        except Exception as e:  # ee.EEException and HTTP errors share no common base
+            if attempt == attempts - 1 or not _is_transient(e):
+                raise
+            delay = base_delay * (2 ** attempt)
+            logger.warning(f"GEE {what} failed ({e}); retrying in {delay:.0f}s ({attempt + 1}/{attempts})")
+            time.sleep(delay)
 
 
 def tag(payload: dict) -> str:
@@ -103,7 +135,9 @@ def _download_tile(image, band: str, crs: str, transform: affine.Affine, tile_px
         da = da.isel(time=0, drop=True)
     # xee returns dims (X, Y); orient to (y, x) descending-y like a GeoTIFF
     da = da.rename({d: ("x" if d.lower() in ("x", "lon") else "y") for d in da.dims}).transpose("y", "x")
-    da = da.sortby("y", ascending=False).sortby("x").load()
+    da = da.sortby("y", ascending=False).sortby("x")
+    # the actual pixel fetch happens in .load(); retry transient GEE/network blips
+    da = _with_retry(lambda: da.load(), what=f"tile {path.name}")
     if not np.isfinite(da.values).any():
         path.with_suffix(".empty").touch()
         return
@@ -153,9 +187,13 @@ def _fetch_chunk(collection_id: str, bounds: tuple, properties: list[str], path:
     region = ee.Geometry.Rectangle(list(bounds), proj="EPSG:4326", geodesic=False)
     fc = ee.FeatureCollection(collection_id).filterBounds(region).select(properties)
     try:
-        gdf = ee.data.computeFeatures({"expression": fc, "fileFormat": "GEOPANDAS_GEODATAFRAME"})
+        gdf = _with_retry(
+            lambda: ee.data.computeFeatures({"expression": fc, "fileFormat": "GEOPANDAS_GEODATAFRAME"}),
+            what=f"computeFeatures {path.name}",
+        )
     except ee.EEException as e:
-        if depth >= 4 or "too" not in str(e).lower():
+        # only split when GEE says the request is too large; transient errors were already retried above
+        if depth >= 4 or not _is_too_large(e):
             raise
         minx, miny, maxx, maxy = bounds
         mx, my = (minx + maxx) / 2, (miny + maxy) / 2

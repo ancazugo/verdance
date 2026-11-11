@@ -18,6 +18,7 @@ from pyspark.sql.session import SparkSession
 from .config.schema import VerdanceConfig
 from .pipeline import build_buildings_overlay, ensure_dggs_files, unit_output_name
 from .utils.data_processing import save_temp_file
+from .utils.manifest import warn_on_incomplete_runs
 
 
 def merge_output_csv(
@@ -34,6 +35,13 @@ def merge_output_csv(
 
     db_dir = Path(cfg.output.base_dir) / "database"
     base = Path(cfg.output.base_dir)
+
+    # Surface partial runs before consolidating: a module that failed on some
+    # geo codes would otherwise merge cleanly into an under-reporting table
+    module_dirs = {"T3": base / "T3", "T30_buildings": base / "T30_buildings", "Visibility": base / "Visibility"}
+    for module in ("T30", "T300", "Tree_count"):
+        module_dirs[module] = base / unit_output_name(module, dggs, dggs_resolution)
+    warn_on_incomplete_runs(base, module_dirs)
 
     for buffer in t3_buffer_lst:
         if not list((base / "T3").glob(f"*_{buffer}m.csv")):

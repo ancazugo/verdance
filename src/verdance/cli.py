@@ -5,6 +5,7 @@ verdance CLI — measure the 3-30-300 rule of urban greening.
 
 import inspect
 import concurrent.futures
+import time
 from pathlib import Path
 from typing import Optional
 
@@ -16,13 +17,8 @@ from .config.loader import load_config
 from .dggs import RESOLUTION_RANGES, SYSTEM_NAMES, get_system
 from .pipeline import load_tables, setup_output_dirs, unit_output_name
 from .utils.logging_config import setup_logger
+from .utils.manifest import write_run_manifest
 from .utils.sedona_config import get_spark
-from . import t3 as t3_module
-from . import t30 as t30_module
-from . import t30_buildings as t30_buildings_module
-from . import t300 as t300_module
-from . import tree_count as tree_count_module
-from .optional import visibility as visibility_module
 
 app = typer.Typer(help="verdance: 3-30-300 urban greening metrics")
 
@@ -34,6 +30,17 @@ def _print_version(value: bool) -> None:
         raise typer.Exit()
 
 
+def _load_config_or_exit(config: Path):
+    """Load the config, turning a bad/malformed config into a one-line error instead of a traceback."""
+    import yaml
+
+    try:
+        return load_config(config)
+    except (ValueError, yaml.YAMLError, OSError) as e:
+        typer.echo(f"Error: invalid config {config}: {e}", err=True)
+        raise typer.Exit(1)
+
+
 @app.callback()
 def _callback(
     version: bool = typer.Option(False, "--version", is_flag=True, callback=_print_version, is_eager=True, help="Show the version and exit"),
@@ -41,26 +48,30 @@ def _callback(
     """verdance: 3-30-300 urban greening metrics."""
 
 
-def _run_process(process: str, args_dict: dict, geo_code: str) -> object:
-    """Dispatch one geo_code to the module's process_geo_code, passing only the kwargs it accepts."""
-    process_fns = {
-        "T3": t3_module.process_geo_code,
-        "T30": t30_module.process_geo_code,
-        "T30_buildings": t30_buildings_module.process_geo_code,
-        "T300": t300_module.process_geo_code,
-        "Tree_count": tree_count_module.process_geo_code,
-        "Visibility": visibility_module.process_geo_code,
-    }
-    fn = process_fns[process]
-    valid_params = set(inspect.signature(fn).parameters.keys())
-    filtered = {k: v for k, v in args_dict.items() if k in valid_params}
-    filtered["geo_code"] = geo_code
-    return fn(**filtered)
+# Per-geo dispatch map and helper are shared with the programmatic API (verdance.run)
+from .api import PROCESS_FNS as _PROCESS_FNS
+from .api import run_process_code as _run_process
+
+# Flags that tune a per-geo-code module; warned about when the chosen process ignores them
+_TUNABLE_FLAGS = {"buffer", "tree_area", "tree_height", "low_threshold", "high_threshold", "gee_scale", "query_method"}
+
+
+def _warn_ignored_flags(process: str) -> None:
+    """Warn once when the user set --flags the chosen process silently ignores (dispatch drops them)."""
+    import sys
+
+    if process not in _PROCESS_FNS:
+        return
+    passed = {arg[2:].split("=")[0].replace("-", "_") for arg in sys.argv if arg.startswith("--")}
+    accepted = set(inspect.signature(_PROCESS_FNS[process]).parameters)
+    ignored = (passed & _TUNABLE_FLAGS) - accepted
+    if ignored:
+        logger.warning(f"{process} ignores these flags you set: {sorted('--' + f for f in ignored)}")
 
 
 @app.command()
 def run(
-    config: Path = typer.Option(..., "--config", "-c", help="Path to study-area YAML config file"),
+    config: Path = typer.Option(..., "--config", "-c", exists=True, dir_okay=False, readable=True, help="Path to study-area YAML config file"),
     process: str = typer.Option(..., "--process", "-p", help="Module to run: Trees, Heights, T3, T30, T30_buildings, T300, Tree_count, Visibility, Spectral, Merge"),
     geo_level: str = typer.Option(None, "--geo_level", help="Geography column to process (must be in config.columns.geo_levels)"),
     sub_geo_level: str = typer.Option(None, "--sub_geo_level", help="Sub-geography column results are reported at (default: finest level in config.columns.geo_levels)"),
@@ -105,12 +116,16 @@ def run(
     module CSVs into `<output.base_dir>/database/T3_30_300_spectral.parquet`
     and must run last.
     """
-    cfg = load_config(config)
+    cfg = _load_config_or_exit(config)
     geo_levels = cfg.columns.geo_levels
 
     valid_processes = {"Trees", "Heights", "T3", "T30", "T30_buildings", "T300", "Tree_count", "Visibility", "Spectral", "Merge"}
     if process not in valid_processes:
         typer.echo(f"Error: --process must be one of {sorted(valid_processes)}", err=True)
+        raise typer.Exit(1)
+
+    if query_method not in ("sql", "rdd"):
+        typer.echo(f"Error: --query_method must be 'sql' or 'rdd', got '{query_method}'", err=True)
         raise typer.Exit(1)
 
     if rule_distance not in ("euclidean", "network"):
@@ -258,19 +273,41 @@ def run(
         "road_edges_gdf": tables.get("road_edges_gdf"),
     }
 
-    codes = [geo_code] if geo_code else tables["census_boundaries_gdf"][geo_level or geo_levels[0]].unique()
+    _warn_ignored_flags(process)
+    codes = list([geo_code] if geo_code else tables["census_boundaries_gdf"][geo_level or geo_levels[0]].unique())
     logger.info(f"Running {process} for {len(codes)} regions")
+
+    start = time.time()
+    succeeded, failed = [], []
+
+    def _record(code, result) -> None:
+        # process_geo_code catches its own errors and returns None; a cached CSV
+        # (no-overwrite resume) is a DataFrame, so it counts as success
+        (succeeded if result is not None else failed).append(code)
 
     if parallel:
         with concurrent.futures.ThreadPoolExecutor(max_workers=n_workers) as executor:
-            futures = [executor.submit(_run_process, process, args_dict, code) for code in codes]
-            for future in tqdm(concurrent.futures.as_completed(futures), total=len(futures), desc="Regions"):
-                future.result()
+            future_to_code = {executor.submit(_run_process, process, args_dict, code): code for code in codes}
+            for future in tqdm(concurrent.futures.as_completed(future_to_code), total=len(codes), desc="Regions"):
+                code = future_to_code[future]
+                try:
+                    _record(code, future.result())
+                except Exception:
+                    logger.exception(f"{process}: error processing {code}")
+                    failed.append(code)
     else:
         for code in tqdm(codes, desc="Regions"):
-            _run_process(process, args_dict, code)
+            try:
+                _record(code, _run_process(process, args_dict, code))
+            except Exception:
+                logger.exception(f"{process}: error processing {code}")
+                failed.append(code)
 
-    logger.info(f"{process} completed for {len(codes)} regions")
+    write_run_manifest(
+        output_dir, process, codes, succeeded, failed, cfg=cfg, duration_s=time.time() - start,
+        extra={"geo_level": args_dict["geo_level"], "sub_geo_level": args_dict["sub_geo_level"], "buffer": buffer},
+    )
+    logger.info(f"{process} completed: {len(succeeded)}/{len(codes)} regions")
 
 
 def _run_heights(cfg, overwrite: bool) -> None:
@@ -316,12 +353,17 @@ def _run_visibility_raster(
     inputs = VisibilityInputs.load(cfg, overlay_path)
     codes = [geo_code] if geo_code else pd.read_parquet(boundaries_path, columns=[geo_level])[geo_level].dropna().unique()
     logger.info(f"Visibility (raster): {len(codes)} regions, buffer {buffer} m, {numba.get_num_threads()} threads")
+    start = time.time()
+    codes = list(codes)
     failed = [
         code for code in tqdm(codes, desc="Regions")
         if process_geo_code_raster(geo_level, code, sub_geo_level, cfg, inputs, params, dirs["visibility"], overwrite) is None
     ]
-    if failed:
-        logger.error(f"Visibility failed for {len(failed)} regions: {failed}")
+    write_run_manifest(
+        dirs["visibility"], "Visibility", codes, [c for c in codes if c not in failed], failed,
+        cfg=cfg, duration_s=time.time() - start,
+        extra={"geo_level": geo_level, "sub_geo_level": sub_geo_level, "buffer": buffer, "engine": "raster"},
+    )
 
 
 def _run_trees(cfg, geo_level: str, geo_code: str | None, n_workers: int, overwrite: bool) -> None:
@@ -347,18 +389,22 @@ def _run_trees(cfg, geo_level: str, geo_code: str | None, n_workers: int, overwr
     elif "context" in codes:
         codes.remove("context")
     logger.info(f"Trees: segmenting {len(codes)} regions from {chm_source(cfg)} with {n_workers} workers")
+    start = time.time()
+    codes = list(codes)
     failed = [
         code for code in tqdm(codes, desc="Regions")
         if process_trees(geo_level, code, cfg, boundaries, n_workers=n_workers, overwrite=overwrite) is None
     ]
-    if failed:
-        logger.error(f"Trees failed for {len(failed)} regions: {failed}")
+    write_run_manifest(
+        Path(cfg.data.trees_dir), "Trees", codes, [c for c in codes if c not in failed], failed,
+        cfg=cfg, duration_s=time.time() - start, extra={"geo_level": geo_level},
+    )
 
 
 @app.command()
 def viz(
-    config: Path = typer.Option(..., "--config", "-c", help="Path to study-area YAML config file"),
-    port: int = typer.Option(8765, "--port", help="Port to serve the map on"),
+    config: Path = typer.Option(..., "--config", "-c", exists=True, dir_okay=False, readable=True, help="Path to study-area YAML config file"),
+    port: int = typer.Option(8765, "--port", help="Port to serve the map on (0 = pick a free port)"),
     host: str = typer.Option("127.0.0.1", "--host", help="Interface to bind (default: this machine only)"),
     rebuild: bool = typer.Option(False, "--rebuild", is_flag=True, help="Rebuild the map store even if outputs are unchanged"),
     no_browser: bool = typer.Option(False, "--no-browser", is_flag=True, help="Don't open a browser tab"),
@@ -377,7 +423,7 @@ def viz(
     from .viz.store import connect, ensure_store, read_meta
     from .viz.tiles import TileStore
 
-    cfg = load_config(config)
+    cfg = _load_config_or_exit(config)
     log_dir = Path(cfg.output.base_dir) / "logs"
     log_dir.mkdir(parents=True, exist_ok=True)
     setup_logger(log_dir / "viz.log", log_level)
@@ -393,6 +439,109 @@ def viz(
     finally:
         con.close()
     serve(TileStore(path, meta), host=host, port=port, open_browser=not no_browser)
+
+
+def _vector_columns(path: Path, layer: str | None = None) -> set[str] | None:
+    """Column names of a vector file without reading its features; None if it can't be read."""
+    try:
+        p = Path(path)
+        if p.suffix.lower() in (".parquet", ".geoparquet"):
+            import pyarrow.parquet as pq
+            return set(pq.read_schema(p).names)
+        import geopandas as gpd
+        kwargs = {"layer": layer} if layer else {}
+        return set(gpd.read_file(p, rows=0, **kwargs).columns)
+    except Exception:
+        return None
+
+
+@app.command()
+def validate(
+    config: Path = typer.Option(..., "--config", "-c", exists=True, dir_okay=False, readable=True, help="Path to study-area YAML config file"),
+):
+    """Dry-run a config: load it, check input files and columns exist, and print the resolved settings.
+
+    Catches the common first-run failures (bad YAML, missing data files, a
+    geo_level column that isn't in the census file, a geographic CRS, missing
+    Java) before a long Spark run starts. Exits non-zero if anything is wrong.
+    """
+    from .config.schema import building_source, is_osm, is_overture
+
+    cfg = _load_config_or_exit(config)
+    errors: list[str] = []
+    warnings: list[str] = []
+
+    # Input files that are real paths (not remote-source sentinels like osm/overture)
+    file_paths: list[tuple[str, str]] = [("data.census_boundaries", cfg.data.census_boundaries)]
+    for name, value, is_remote in [
+        ("data.buildings", cfg.data.buildings, building_source(cfg.data.buildings) is not None),
+        ("data.parks_sites", cfg.data.parks_sites, is_osm(cfg.data.parks_sites) or is_overture(cfg.data.parks_sites)),
+        ("data.parks_access", cfg.data.parks_access, is_osm(cfg.data.parks_access)),
+        ("data.roads", cfg.data.roads, is_osm(cfg.data.roads)),
+    ]:
+        if value and not is_remote:
+            file_paths.append((name, value))
+    if cfg.data.road_nodes:
+        file_paths.append(("data.road_nodes", cfg.data.road_nodes))
+    for name, value in file_paths:
+        if not Path(value).exists():
+            errors.append(f"{name}: file not found: {value}")
+
+    for name, value in [("data.trees_dir", cfg.data.trees_dir), ("data.chm_tiles_dir", cfg.data.chm_tiles_dir)]:
+        if value and not Path(value).is_dir():
+            warnings.append(f"{name}: directory not found (needed by the processes that use it): {value}")
+
+    # Census columns: every geo_level (and any geo_level_names value) must be present
+    if Path(cfg.data.census_boundaries).exists():
+        cols = _vector_columns(cfg.data.census_boundaries)
+        if cols is None:
+            warnings.append(f"Could not read columns of data.census_boundaries: {cfg.data.census_boundaries}")
+        else:
+            for level in cfg.columns.geo_levels:
+                if level not in cols:
+                    errors.append(f"columns.geo_levels: '{level}' is not a column of the census file (has: {sorted(cols)})")
+            for level, name_col in cfg.columns.geo_level_names.items():
+                if name_col not in cols:
+                    warnings.append(f"columns.geo_level_names[{level}]: '{name_col}' is not in the census file")
+
+    # Buildings id column, when buildings come from a file
+    if building_source(cfg.data.buildings) is None and Path(cfg.data.buildings).exists():
+        cols = _vector_columns(cfg.data.buildings, cfg.columns.building_layer)
+        if cols is not None and cfg.columns.building_id and cfg.columns.building_id not in cols:
+            errors.append(f"columns.building_id: '{cfg.columns.building_id}' is not a column of the buildings file")
+
+    # Java is needed for every Spark-based process
+    import shutil
+    from .utils.constants import JAVA_HOME
+    if not (JAVA_HOME or shutil.which("java")):
+        warnings.append("No Java found (JAVA_HOME unset and `java` not on PATH) — Spark processes will fail. Install JDK 17.")
+
+    # GEE-backed sources need authentication + a project
+    gee_sources = [n for n, v in [
+        ("data.buildings: open_buildings", cfg.data.buildings == "open_buildings"),
+        ("data.canopy_height_ee_path", bool(cfg.data.canopy_height_ee_path)),
+        ("gee_boundaries_asset (Spectral)", bool(cfg.gee_boundaries_asset)),
+    ] if v]
+    if gee_sources and not (cfg.gee_project or __import__("os").getenv("GEE_PROJECT_NAME")):
+        warnings.append(f"GEE sources configured ({gee_sources}) but no gee_project set — run `earthengine authenticate` and set gee_project")
+
+    typer.echo(f"\nResolved config for '{cfg.study_area_name}':")
+    typer.echo(f"  crs:        {cfg.crs}")
+    typer.echo(f"  geo_levels: {cfg.columns.geo_levels}")
+    typer.echo(f"  buildings:  {cfg.data.buildings}")
+    typer.echo(f"  output:     {cfg.output.base_dir}")
+    typer.echo(f"  heights:    {[s.label for s in cfg.heights.sources]}")
+    if cfg.dggs:
+        typer.echo(f"  dggs:       {cfg.dggs} @ res {cfg.dggs_resolution}")
+
+    for w in warnings:
+        typer.echo(f"  ! {w}", err=True)
+    if errors:
+        for e in errors:
+            typer.echo(f"  ✗ {e}", err=True)
+        typer.echo(f"\n{len(errors)} error(s) found.", err=True)
+        raise typer.Exit(1)
+    typer.echo(f"\nConfig OK ({len(warnings)} warning(s)).")
 
 
 def main():

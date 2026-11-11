@@ -1,7 +1,6 @@
 """Context ring around the study area: ring geometry, context buildings, merged footprints for Heights/Visibility."""
 
 import geopandas as gpd
-import pandas as pd
 import pytest
 from shapely.geometry import box
 

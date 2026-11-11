@@ -4,37 +4,28 @@ Requires tile_system.enabled = True in config.
 """
 
 import re
+from functools import partial
+from pathlib import Path
+
 import pandas as pd
 from loguru import logger
-from pathlib import Path
 
 from pyspark.sql.functions import udf
 from pyspark.sql.session import SparkSession
 from pyspark.sql.types import StringType, IntegerType
 
+# Default grid-reference pattern, shared by the plain extractor and its UDF factory
+_GRID_REF_PATTERN = r"VOM_([A-Z]{2}\d{4})_"
 
-def extract_vom_type(file_name):
+
+def extract_vom_type(file_name: str) -> str:
     return "HS" if "VOM_HS_" in file_name else "CHM"
 
 
-@udf(StringType())
-def extract_vom_type_udf(file_name):
-    return "HS" if "VOM_HS_" in file_name else "CHM"
-
-
-def extract_grid_reference(filename: str, pattern: str = r"VOM_([A-Z]{2}\d{4})_") -> str | None:
+def extract_grid_reference(filename: str, pattern: str = _GRID_REF_PATTERN) -> str | None:
     """Extract grid reference from filename using the provided regex pattern."""
     match = re.search(pattern, filename)
     return match.group(1) if match else None
-
-
-def make_extract_grid_reference_udf(pattern: str = r"VOM_([A-Z]{2}\d{4})_"):
-    @udf(StringType())
-    def _udf(filename: str) -> str | None:
-        import re
-        m = re.search(pattern, filename)
-        return m.group(1) if m else None
-    return _udf
 
 
 def extract_year(file_path: str) -> int | None:
@@ -42,11 +33,15 @@ def extract_year(file_path: str) -> int | None:
     return int(match.group(1)) if match else None
 
 
-@udf(IntegerType())
-def extract_year_udf(file_path):
-    import re
-    match = re.search(r"/(\d{4})/", file_path)
-    return int(match.group(1)) if match else None
+# Spark UDFs derived from the plain functions above, so the logic lives in one place
+# (cloudpickle serialises the module-level functions by reference; re is imported at
+# module top, so it is available on executors).
+extract_vom_type_udf = udf(extract_vom_type, StringType())
+extract_year_udf = udf(extract_year, IntegerType())
+
+
+def make_extract_grid_reference_udf(pattern: str = _GRID_REF_PATTERN):
+    return udf(partial(extract_grid_reference, pattern=pattern), StringType())
 
 
 def translate_tile_name(tile_name: str) -> str:
@@ -57,18 +52,20 @@ def translate_tile_name(tile_name: str) -> str:
     NS_dict = {"S": "0", "N": "5"}
     EW_dict = {"W": "0", "E": "5"}
 
-    assert len(tile_name) == 6
+    if len(tile_name) != 6:
+        raise ValueError(f"tile_name must be 6 characters (e.g. 'TL0045' or 'TL04NW'), got {tile_name!r}")
     code = tile_name[2:6].upper()
+    prefix = tile_name[:2].upper()
 
     try:
         int(code)
         NS_dict = {v: k for k, v in NS_dict.items()}
         EW_dict = {v: k for k, v in EW_dict.items()}
         direction_code = code[0] + code[2] + NS_dict[code[3]] + EW_dict[code[1]]
-        return tile_name[:2].upper() + direction_code
+        return prefix + direction_code
     except ValueError:
         number_code = code[0] + EW_dict[code[3]] + code[1] + NS_dict[code[2]]
-        return tile_name[:2].lower() + number_code
+        return prefix + number_code
 
 
 def generate_vom_paths_df(sedona: SparkSession, chm_tiles_dir: Path, tile_name_pattern: str = r"VOM_([A-Z]{2}\d{4})_") -> pd.DataFrame:

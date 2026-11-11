@@ -13,6 +13,7 @@ from .utils.data_processing import (
     filter_buffer_geometries,
     get_geometries,
     load_trees_gdf,
+    sql_str,
     view_suffix,
     drop_geo_views,
 )
@@ -87,7 +88,7 @@ def _attach_sub_geo_level(
         f"""
         SELECT building_id, {sub_geo_level}
         FROM boundaries_buildings_overlay
-        WHERE {geo_level} = '{geo_code}'
+        WHERE {geo_level} = {sql_str(geo_code)}
         """
     ).toPandas()
     # the RDD query path returns building_id as string while file-backed ids may be numeric

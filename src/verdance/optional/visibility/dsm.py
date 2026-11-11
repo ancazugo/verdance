@@ -48,10 +48,6 @@ def sample_grid(grid: np.ndarray, x0: float, y0: float, res: float, x, y) -> np.
     r = np.clip(np.floor((y0 - np.asarray(y)) / res).astype(np.int64), 0, rows - 1)
     return grid[r, c].astype(np.float64)
 
-    @property
-    def transform(self) -> Affine:
-        return Affine(self.res, 0, self.x0, 0, -self.res, self.y0)
-
 
 def grid_for(bounds: tuple, res: float) -> tuple[float, float, int, int]:
     """(x0, y0, width, height) of a grid aligned to multiples of res covering bounds."""
