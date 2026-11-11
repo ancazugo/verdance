@@ -23,12 +23,48 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Changed
 
+- `--query_method` defaults to `sql` instead of `rdd`. With the join fixed,
+  `sql` is both faster (47 s vs 74 s on the London region) and complete: it
+  returns a row for every building, where `rdd` omits those with no tree in
+  range (4.5% of London). Merged totals are unchanged — `Merge` zero-filled
+  those rows already — but the per-geo T3 CSVs are now complete on their own.
+- `binarise_tiles` refuses a CHM mosaic bigger than RAM with a message naming
+  the likely cause, instead of being out-of-memory killed. It builds the mosaic
+  in driver memory, which suits small survey tiles (Defra VOM: 5000x5000) but
+  not globally-tiled models — one Meta/WRI tile is 32768² (v2) or 65536² (v1)
+  pixels, i.e. 8–32 GB alone; those belong to `data.meta_chm`, which reads only
+  the boundary window.
 - The local Spark master is now `local[*]` by default and overridable via
   `VERDANCE_SPARK_MASTER` (was a fixed `local[10,0]`). Unused PostGIS/JDBC jars
   are no longer downloaded on first run.
 - Google Earth Engine downloads retry transient errors with backoff, and
   initialisation fails with a clear "run `earthengine authenticate`" message
   instead of blocking on an interactive flow.
+
+### Performance
+
+Validated against a full England run (23.9M buildings, 308 districts):
+
+- T3's SQL path no longer degenerates into a nested loop. A `LEFT JOIN` on
+  `ST_Intersects` cannot use a spatial index, so Sedona compared every
+  building–tree pair; it now uses an inner spatial join plus a zero-fill.
+  On one district (46k buildings x 68k trees) this cut the join from **1156 s
+  to 3.4 s (~340x)** with byte-identical output — same rows, same tree total.
+  On the London region (2.83M buildings x 2.58M trees) it runs in **46.9 s**,
+  against **74.3 s** for the `--query_method rdd` default, which also omits the
+  127,410 buildings (4.5%) with no tree in range; both report the same
+  29,906,922 tree-counts. `Merge` zero-fills those missing rows, so merged
+  totals were unaffected, but the per-geo CSVs were incomplete on their own.
+- `load_tables` only reads the road and park datasets for T300, the one module
+  that uses them (`load_roads_parks`). For England that skips **898 MB of the
+  1,887 MB** it previously read for every module, plus registering two Spark
+  views built from 483k park features that nothing queried.
+- T300 takes the already-filtered parks from `load_tables` instead of re-reading
+  and re-filtering them once per geo code — 308 redundant passes over the parks
+  datasets on an England run.
+- `binarise_tiles` no longer forces every CHM tile fully resident before merging
+  them, roughly halving peak memory; English districts reach 244 overlapping
+  1 m tiles (median 18, p90 60) at ~95 MB each.
 
 ### Fixed
 

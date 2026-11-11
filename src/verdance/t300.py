@@ -22,12 +22,20 @@ def filter_features(
     geo_boundary_gdf: gpd.GeoDataFrame,
     cfg: VerdanceConfig,
     search_buffer: int | None = None,
+    parks_sites_gdf: gpd.GeoDataFrame | None = None,
+    parks_access_gdf: gpd.GeoDataFrame | None = None,
 ) -> tuple:
     """Spatially filter roads, parks, and buildings to the geo_code.
 
     Buildings are those owned by geo_code in the buildings overlay. Roads and
     parks use the boundary buffered by search_buffer metres (default
     cfg.osm.fetch_buffer, 2000 m) so the network can route to parks outside it.
+
+    Pass the already-filtered parks from load_tables as parks_sites_gdf /
+    parks_access_gdf; they are read from disk and re-filtered here only when
+    omitted. Re-reading them per geo code cost a full pass over the parks
+    datasets for every unit (England: 308 districts x ~43 MB, and 157k park
+    sites re-filtered each time), while the road frames were already hoisted.
     """
     if search_buffer is None:
         search_buffer = cfg.osm.fetch_buffer
@@ -56,9 +64,12 @@ def filter_features(
 
     # Parks and access points: use buffered boundary so nearby parks are reachable.
     # Apply the same function/linkage filters that load_tables() applies.
-    db_dir = Path(cfg.output.base_dir) / "database"
-    park_sites_all = _filter_parks(gpd.read_parquet(db_dir / "parks_sites.parquet"), cfg)
-    park_access_all = _filter_park_access(gpd.read_parquet(db_dir / "parks_access.parquet"), park_sites_all, cfg)
+    if parks_sites_gdf is not None and parks_access_gdf is not None:
+        park_sites_all, park_access_all = parks_sites_gdf, parks_access_gdf
+    else:
+        db_dir = Path(cfg.output.base_dir) / "database"
+        park_sites_all = _filter_parks(gpd.read_parquet(db_dir / "parks_sites.parquet"), cfg)
+        park_access_all = _filter_park_access(gpd.read_parquet(db_dir / "parks_access.parquet"), park_sites_all, cfg)
 
     geo_park_sites_gdf = gpd.sjoin(
         park_sites_all,
@@ -200,6 +211,8 @@ def process_geo_code(
     cfg: VerdanceConfig,
     output_dir: Path,
     overwrite: bool = True,
+    parks_sites_gdf: gpd.GeoDataFrame | None = None,
+    parks_access_gdf: gpd.GeoDataFrame | None = None,
 ) -> pd.DataFrame | None:
     """Compute T300 (distance from each building to its nearest park) for one geo_code.
 
@@ -221,7 +234,8 @@ def process_geo_code(
         geo_boundary_gdf = gpd.GeoDataFrame(geo_boundary_sdf.toPandas(), geometry="geometry", crs=cfg.crs)
 
         geo_road_nodes_gdf, geo_road_edges_gdf, geo_park_sites_gdf, geo_park_access_gdf, geo_buildings_gdf = filter_features(
-            sedona, geo_level, geo_code, road_nodes_gdf, road_edges_gdf, geo_boundary_gdf, cfg
+            sedona, geo_level, geo_code, road_nodes_gdf, road_edges_gdf, geo_boundary_gdf, cfg,
+            parks_sites_gdf=parks_sites_gdf, parks_access_gdf=parks_access_gdf,
         )
         geo_graph, geo_park_access_gdf, geo_buildings_gdf = get_road_graph_distances(
             geo_road_nodes_gdf, geo_road_edges_gdf, geo_park_access_gdf, geo_buildings_gdf

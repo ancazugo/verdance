@@ -222,7 +222,7 @@ Useful options:
 - `--geo_code CODE` — process a single geography instead of all
 - `--parallel --n_workers 4` — process geo codes concurrently (per-geo Spark views are isolated, so results match sequential runs)
 - `--no-overwrite` — skip geo codes whose output CSV already exists (resume an interrupted run)
-- `--query_method sql|rdd` — Sedona join strategy for T3 (default `rdd`)
+- `--query_method sql|rdd` — Sedona join strategy for T3 (default `sql`). `sql` uses an indexed spatial join and returns a row for *every* building, with `tree_count` 0 where no tree is in range; `rdd` omits those buildings (Merge zero-fills them, so merged totals match, but its per-geo CSVs are incomplete on their own). On the London region (2.83M buildings × 2.58M trees) `sql` took 47 s against 74 s for `rdd`
 - `--tree_area` / `--tree_height` — a tree counts in T3 and Visibility only if its canopy area (m²) and height (m) are *strictly greater* than these (defaults 10 and 3)
 - `--vis_engine raster|vector` — Visibility engine (default `visibility.engine`, i.e. `raster`; see *Tree visibility* below)
 - `--low_threshold` / `--high_threshold` — canopy-height band in metres for T30/T30_buildings binarisation (default 3–60)
@@ -242,8 +242,10 @@ T30 and T30_buildings pick their canopy source by what's configured, in priority
      meta_chm: v2
    ```
 
-   - `v1` — the original release (Tolan et al. 2024; `forests/v1/alsgedi_global_v6_float`, zoom-9 tiles of ~150–400 MB). The same data as the GEE asset below: over a 600 m Cambridge square, v1 from AWS gives 7.63 % cover and v1 through GEE 7.62 %.
+   - `v1` — the original release (Tolan et al. 2024; `forests/v1/alsgedi_global_v6_float`, zoom-9 tiles of ~150–400 MB). The same data as the GEE asset below: over a 600 m Cambridge square, v1 from AWS gives 7.63 % cover and v1 through GEE 7.62 %. Like v2, v1 tiles declare **no nodata** — but v1 ships no imagery footprints, so there is nothing to mask with: unimaged pixels read 0 and count as mapped-but-treeless, which deflates cover wherever imagery is missing inside a unit (open water, gaps). Prefer `v2` where that matters.
    - `v2` — `forests/v2/global/dinov3_global_chm_v2_ml3` (zoom-10 tiles of ~20–250 MB, heights in whole metres). The same Cambridge square gives 12.78 %, so v1 and v2 results are not interchangeable. v2 tiles declare no nodata, so unimaged pixels (e.g. open sea) read 0 like bare ground; verdance masks pixels outside each tile's imagery footprints (`metadata/<quadkey>.geojson`) as nodata on download and keeps the footprints beside the tile. Footprints can include near-shore sea, which then still counts as no canopy — mostly relevant for T30_buildings buffers on the coast, since census units are usually clipped to the coastline. Imagery dates differ by area (e.g. 2011–2018 in one Norfolk tile); each run logs the range for the area it reads.
+
+   Both releases are tiled in EPSG:3857 at 1.1943 units/pixel, so the *ground* sampling is `1.1943 × cos(latitude)` m — about 0.74 m at Cambridge's 52°N but 1.19 m near the equator. Cover itself stays unbiased (tiles are binarised at native resolution, then reprojected to the config's metric CRS, so the counted pixels are equal-area), but the same config resolves narrow crowns better at higher latitudes — worth keeping in mind when comparing cities at very different latitudes.
 
    `meta_chm` also selects the release wherever the `meta` CHM source is read (`tree_segmentation.source: meta`, raster Visibility); unset, those use v1.
 3. **GEE canopy-height asset** (`canopy_height_ee_path`) — binarised *server-side* in Google Earth Engine and downloaded with [xee](https://github.com/google/Xee); no local canopy data required. Needs `gee_project` in the config. Example asset (global 1 m Meta/WRI canopy height):

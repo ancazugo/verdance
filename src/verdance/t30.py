@@ -1,3 +1,4 @@
+import os
 from pathlib import Path
 
 import time
@@ -21,6 +22,14 @@ from .utils.data_processing import (
 )
 
 
+def _total_ram_bytes() -> int:
+    """Physical RAM in bytes, or 0 when it cannot be determined."""
+    try:
+        return os.sysconf("SC_PAGE_SIZE") * os.sysconf("SC_PHYS_PAGES")
+    except (AttributeError, OSError, ValueError):
+        return 0
+
+
 def binarise_tiles(
     chm_paths_lst: list, low_threshold: float, high_threshold: float,
     target_crs: str | None = None, overlap: str = "latest",
@@ -32,6 +41,15 @@ def binarise_tiles(
     being counted as no-canopy. Where tiles overlap, overlap="latest" keeps
     the last path in sorted order and "max" the per-pixel maximum height
     (data.chm_overlap).
+
+    This is the `data.chm_tiles_dir` path, written for survey products tiled
+    small — Defra VOM ships 5000x5000 px tiles (~95 MB each), and the mosaic for
+    one English district spans up to 244 of them. It builds the whole mosaic in
+    driver memory, so it does not suit globally-tiled models: one Meta/WRI CHM
+    tile is 32768x32768 (v2) or 65536x65536 (v1) pixels, i.e. 8-32 GB on its
+    own. Those belong to `data.meta_chm`, whose path (optional.canopy_meta)
+    reads only the boundary window out of a VRT. The size check below turns
+    that mistake into an error rather than an out-of-memory kill.
     """
     if overlap not in ("latest", "max"):
         raise ValueError(f"overlap must be 'latest' or 'max', got {overlap!r}")
@@ -42,14 +60,46 @@ def binarise_tiles(
     for file in chm_paths_lst:
         try:
             temp_rast = rxr.open_rasterio(file, masked=True)
-            temp_rast.values
+            # probe a single pixel so an unreadable tile is caught and named here,
+            # without forcing the whole tile resident: a full `.values` per tile held
+            # every tile in memory at once on top of the mosaic merge_arrays then
+            # builds. Defra VOM tiles are 5000x5000 at 1 m, so one is ~95 MB (float32)
+            # and English districts reach 244 overlapping tiles (median 18, p90 60).
+            temp_rast[0, :1, :1].values
             chm_xr_lst.append(temp_rast)
         except Exception as e:
             logger.error(f"Error reading {file}: {e}")
 
     if not chm_xr_lst:
         raise FileNotFoundError("No readable CHM tiles overlap the boundary")
-    merged_chm_xr = merge_arrays(chm_xr_lst, method="last" if overlap == "latest" else "max")
+
+    # the mosaic is one driver-side float32 array; refuse it when it cannot fit
+    total_px = sum(int(a.sizes["y"]) * int(a.sizes["x"]) for a in chm_xr_lst)
+    est_bytes = total_px * 4
+    ram = _total_ram_bytes()
+    biggest = max(int(a.sizes["y"]) * int(a.sizes["x"]) for a in chm_xr_lst)
+    if ram and est_bytes > ram:
+        raise MemoryError(
+            f"{len(chm_xr_lst)} CHM tiles would merge into a {est_bytes / 2**30:.1f} GB mosaic, "
+            f"more than this machine's {ram / 2**30:.1f} GB of RAM (largest tile {biggest:,} px). "
+            "Process a finer geo_level, or — if these are globally-tiled rasters such as the "
+            "Meta/WRI CHM — set data.meta_chm instead of data.chm_tiles_dir, which reads only "
+            "the boundary window."
+        )
+    if ram and est_bytes > ram / 2:
+        logger.warning(
+            f"CHM mosaic for this unit is ~{est_bytes / 2**30:.1f} GB against {ram / 2**30:.1f} GB "
+            "of RAM; reprojection may double it. Consider a finer geo_level."
+        )
+    try:
+        merged_chm_xr = merge_arrays(chm_xr_lst, method="last" if overlap == "latest" else "max")
+    except Exception as e:
+        # the mosaic is still one driver-side array; a district with hundreds of
+        # tiles can exhaust memory here even though the tiles load lazily
+        raise MemoryError(
+            f"Could not merge {len(chm_xr_lst)} CHM tiles into one mosaic ({e}). "
+            "Process a smaller geo_level, or raise SPARK_DRIVER_MEMORY."
+        ) from e
     if target_crs is not None and merged_chm_xr.rio.crs is not None:
         from pyproj import CRS as ProjCRS
         if merged_chm_xr.rio.crs != ProjCRS.from_user_input(target_crs):

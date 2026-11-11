@@ -79,7 +79,7 @@ def run(
     dggs_resolution: Optional[int] = typer.Option(None, "--dggs_resolution", help="Cell resolution for --dggs (h3 0-15, s2 0-30, geohash 1-12, a5 0-30, rhealpix 0-15)"),
     h3_resolution: Optional[int] = typer.Option(None, "--h3_resolution", help="[deprecated] Alias for --dggs h3 --dggs_resolution N"),
     geo_code: Optional[str] = typer.Option(None, "--geo_code", help="Single geography code to process; omit to process all"),
-    query_method: str = typer.Option("rdd", "--query_method", help="Sedona query method: sql or rdd"),
+    query_method: str = typer.Option("sql", "--query_method", help="Sedona join strategy for T3: sql (default; indexed join, counts every building) or rdd (omits buildings with no tree in range)"),
     buffer: int = typer.Option(100, "--buffer", help="Buffer radius in metres around each building (T3, T30_buildings; 0 = footprint only)"),
     tree_area: int = typer.Option(10, "--tree_area", help="Trees count only if canopy area (m²) is strictly greater than this (T3, Visibility)"),
     tree_height: int = typer.Option(3, "--tree_height", help="Trees count only if height (m) is strictly greater than this (T3, Visibility)"),
@@ -228,7 +228,8 @@ def run(
             typer.echo("Error: Spectral requires gee_boundaries_asset in the config", err=True)
             raise typer.Exit(1)
         sedona = get_spark()
-        tables = load_tables(sedona, cfg)
+        # Spectral aggregates on a GEE boundaries asset: no roads or parks needed
+        tables = load_tables(sedona, cfg, load_roads_parks=False)
         setup_gee(cfg.gee_project)
         spectral_geo_level = geo_level or geo_levels[0]
         codes = [geo_code] if geo_code else tables["census_boundaries_gdf"][spectral_geo_level].unique()
@@ -245,7 +246,9 @@ def run(
         return
 
     sedona = get_spark()
-    tables = load_tables(sedona, cfg, dggs=dggs, dggs_resolution=dggs_resolution)
+    # only T300 walks the road network and parks; the rest skip ~900 MB of reads
+    tables = load_tables(sedona, cfg, dggs=dggs, dggs_resolution=dggs_resolution,
+                         load_roads_parks=(process == "T300"))
     dirs = tables["output_dirs"]
 
     output_dir_map = {"T3": dirs["t3"], "T30": dirs["t30"], "T30_buildings": dirs["t30_buildings"], "T300": dirs["t300"], "Tree_count": dirs["tree_count"], "Visibility": dirs["visibility_vector"]}
@@ -271,6 +274,10 @@ def run(
         "overwrite": overwrite,
         "road_nodes_gdf": tables.get("road_nodes_gdf"),
         "road_edges_gdf": tables.get("road_edges_gdf"),
+        # already filtered by load_tables; passing them keeps T300 from re-reading
+        # and re-filtering the parks datasets once per geo code
+        "parks_sites_gdf": tables.get("parks_sites_gdf"),
+        "parks_access_gdf": tables.get("parks_access_gdf"),
     }
 
     _warn_ignored_flags(process)
