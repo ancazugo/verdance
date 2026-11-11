@@ -66,9 +66,10 @@ def count_trees(sedona: SparkSession, geo_code: str) -> pd.DataFrame:
     nested loop over every building x tree pair (the same trap
     t30_buildings.get_canopy_cover_buildings_vector documents). Measured on one
     English district (46k buildings x 68k trees): the LEFT JOIN form took
-    1156 s, this form 3.4 s, and the RDD path 6.1 s, all agreeing on the tree
-    total; this form and the LEFT JOIN also agree row for row, while the RDD
-    path omits the buildings with no tree in range.
+    1156 s, this form 3.4 s, and the RDD path 6.1 s; on the London region
+    (2.83M x 2.58M) this form took 46.9 s and the RDD path 74.3 s. All agree on
+    the tree total, and this form agrees row for row with the LEFT JOIN, while
+    the RDD path omits buildings with no tree in range (4.5% of London).
     """
     sfx = view_suffix(geo_code)
     trees_within_buffer_sdf = sedona.sql(

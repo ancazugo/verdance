@@ -39,6 +39,11 @@ Validated against a full England run (23.9M buildings, 308 districts):
   building–tree pair; it now uses an inner spatial join plus a zero-fill.
   On one district (46k buildings x 68k trees) this cut the join from **1156 s
   to 3.4 s (~340x)** with byte-identical output — same rows, same tree total.
+  On the London region (2.83M buildings x 2.58M trees) it runs in **46.9 s**,
+  against **74.3 s** for the `--query_method rdd` default, which also omits the
+  127,410 buildings (4.5%) with no tree in range; both report the same
+  29,906,922 tree-counts. `Merge` zero-fills those missing rows, so merged
+  totals were unaffected, but the per-geo CSVs were incomplete on their own.
 - `load_tables` only reads the road and park datasets for T300, the one module
   that uses them (`load_roads_parks`). For England that skips **898 MB of the
   1,887 MB** it previously read for every module, plus registering two Spark
