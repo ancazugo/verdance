@@ -131,6 +131,7 @@ def _coerce_null_columns(gdf: gpd.GeoDataFrame) -> gpd.GeoDataFrame:
 def load_tables(
     sedona: SparkSession, cfg: VerdanceConfig,
     dggs: str | None = None, dggs_resolution: int | None = None,
+    load_roads_parks: bool = True,
 ) -> dict:
     """
     Load all datasets from paths in cfg, rename columns to canonical names,
@@ -139,6 +140,12 @@ def load_tables(
     When a DGGS is given, the `boundaries` view (and the buildings overlay)
     contains grid cells tagged with parent census codes instead of the census
     units themselves.
+
+    `load_roads_parks` can be turned off for the modules that never touch them
+    (everything except T300), which skips reading the road and park datasets
+    into the driver and registering their views; their dict entries are then
+    None. On England those four files are 898 MB of the 1,887 MB this function
+    would otherwise read for every module.
     """
     logger.debug("Loading tables from config paths")
 
@@ -160,11 +167,9 @@ def load_tables(
         census_parquet, buildings_overlay_parquet = ensure_dggs_files(sedona, db_dir, cfg, dggs, dggs_resolution)
 
     buildings_gdf = gpd.read_parquet(buildings_parquet)
-    parks_sites_gdf = gpd.read_parquet(parks_sites_parquet)
-    parks_access_gdf = gpd.read_parquet(parks_access_parquet)
-    road_edges_gdf = gpd.read_parquet(roads_edges_parquet)
-    road_nodes_gdf = gpd.read_parquet(roads_nodes_parquet)
     census_boundaries_gdf = gpd.read_parquet(census_parquet)
+    road_edges_gdf = gpd.read_parquet(roads_edges_parquet) if load_roads_parks else None
+    road_nodes_gdf = gpd.read_parquet(roads_nodes_parquet) if load_roads_parks else None
 
     census_boundaries_sdf = sedona.createDataFrame(_coerce_null_columns(census_boundaries_gdf))
     census_boundaries_sdf.createOrReplaceTempView("boundaries")
@@ -178,13 +183,16 @@ def load_tables(
     overlay_sdf = sedona.read.format("parquet").load(str(buildings_overlay_parquet))
     overlay_sdf.createOrReplaceTempView("boundaries_buildings_overlay")
 
-    park_sites_filtered = _filter_parks(parks_sites_gdf, cfg)
-    park_access_filtered = _filter_park_access(parks_access_gdf, park_sites_filtered, cfg)
+    park_sites_filtered = park_access_filtered = None
+    if load_roads_parks:
+        park_sites_filtered = _filter_parks(gpd.read_parquet(parks_sites_parquet), cfg)
+        park_access_filtered = _filter_park_access(gpd.read_parquet(parks_access_parquet), park_sites_filtered, cfg)
 
-    park_sites_sdf = sedona.createDataFrame(_coerce_null_columns(park_sites_filtered))
-    park_sites_sdf.createOrReplaceTempView("public_park_sites")
-    park_access_sdf = sedona.createDataFrame(_coerce_null_columns(park_access_filtered))
-    park_access_sdf.createOrReplaceTempView("public_park_accesses")
+        # registered for interactive use; the pipeline itself reads the frames above
+        sedona.createDataFrame(_coerce_null_columns(park_sites_filtered)) \
+            .createOrReplaceTempView("public_park_sites")
+        sedona.createDataFrame(_coerce_null_columns(park_access_filtered)) \
+            .createOrReplaceTempView("public_park_accesses")
 
     return {
         "census_boundaries_gdf": census_boundaries_gdf,
