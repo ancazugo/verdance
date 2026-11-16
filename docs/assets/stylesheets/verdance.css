@@ -1,0 +1,42 @@
+/* Palette taken from the verdance mark.
+ *
+ * The dark logo variants use #2b8f4a and #52c065; the light variants use
+ * #3fa34d and #1f7a3f. #3fa34d is the lighter green, so it serves as the
+ * primary in the dark scheme, where the navbar needs more contrast against
+ * dark surroundings, and #2b8f4a serves as the primary in the light scheme.
+ */
+
+:root {
+  --verdance-green-deep: #1f7a3f;
+  --verdance-green: #2b8f4a;
+  --verdance-green-light: #3fa34d;
+  --verdance-green-bright: #52c065;
+  --verdance-ink: #24352b;
+}
+
+[data-md-color-scheme="default"] {
+  --md-primary-fg-color: var(--verdance-green);
+  --md-primary-fg-color--light: var(--verdance-green-light);
+  --md-primary-fg-color--dark: var(--verdance-green-deep);
+  --md-accent-fg-color: var(--verdance-green-bright);
+  --md-typeset-a-color: var(--verdance-green);
+}
+
+[data-md-color-scheme="slate"] {
+  --md-primary-fg-color: var(--verdance-green-light);
+  --md-primary-fg-color--light: var(--verdance-green-bright);
+  --md-primary-fg-color--dark: var(--verdance-green);
+  --md-accent-fg-color: var(--verdance-green-bright);
+  --md-typeset-a-color: var(--verdance-green-bright);
+}
+
+/* The home page hero: the full logo, centred, with no list bullets. */
+.verdance-hero {
+  text-align: center;
+  margin: 1.5rem 0 2.5rem;
+}
+
+.verdance-hero img {
+  max-width: 320px;
+  width: 100%;
+}

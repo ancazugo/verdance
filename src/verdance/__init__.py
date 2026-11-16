@@ -9,7 +9,7 @@ These are imported lazily so `import verdance` (e.g. to read `__version__`)
 does not pull in Spark and the rest of the stack.
 """
 
-__version__ = "0.3.0"
+__version__ = "0.4.0"
 
 __all__ = ["__version__", "run", "load_config", "VerdanceConfig"]
 

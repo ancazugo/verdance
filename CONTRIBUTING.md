@@ -72,6 +72,29 @@ export VERDANCE_DUCKDB_EXTENSIONS=/scratch/<you>/duckdb-ext
 
 Never commit caches, downloaded data, generated outputs or local city configs.
 
+## Documentation
+
+The site at <https://sdgresearch.github.io/verdance/> is built with MkDocs Material from
+`docs/`. The config and API references are generated from the source by mkdocstrings, so
+editing a docstring updates the site.
+
+The docs toolchain is a separate dependency group, installed without the project itself —
+mkdocstrings reads the package statically, so building the site needs neither Spark, GDAL
+nor Java:
+
+```bash
+uv sync --only-group docs
+uv run --only-group docs mkdocs serve    # live preview at http://127.0.0.1:8000
+uv run --only-group docs mkdocs build --strict   # what CI runs
+```
+
+`--strict` turns broken links, missing anchors and unresolved API references into errors.
+Run it before pushing: the `docs` workflow builds on every pull request that touches
+`docs/`, `mkdocs.yml` or `src/`, and deploys to the `gh-pages` branch when master moves.
+
+Pages under `docs/superpowers/` are internal design documents and are excluded from the
+published site.
+
 ## Code style
 
 Linting uses [ruff](https://docs.astral.sh/ruff/), configured in

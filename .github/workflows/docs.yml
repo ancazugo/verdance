@@ -1,0 +1,73 @@
+name: docs
+
+# Builds the MkDocs site and publishes it to the gh-pages branch, which GitHub
+# Pages serves at https://sdgresearch.github.io/verdance/.
+#
+# The build deliberately installs only the `docs` dependency group, never the
+# project itself: mkdocstrings reads the package statically through Griffe
+# (`paths: ["src"]` in mkdocs.yml), so the site builds in seconds without
+# PySpark, Sedona, GDAL, rasterio or a Java runtime.
+
+on:
+  push:
+    branches: [master]
+  # Build (without deploying) on PRs that touch the docs, so a broken site
+  # fails review rather than master.
+  pull_request:
+    paths:
+      - "docs/**"
+      - "mkdocs.yml"
+      - "src/**"
+      - ".github/workflows/docs.yml"
+
+concurrency:
+  group: docs-${{ github.ref }}
+  cancel-in-progress: true
+
+permissions:
+  contents: write # mkdocs gh-deploy pushes the built site to gh-pages
+
+jobs:
+  docs:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0 # gh-deploy needs the gh-pages history
+
+      - name: Configure git credentials
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+
+      - name: Install uv
+        uses: astral-sh/setup-uv@v5
+        with:
+          python-version: "3.12"
+          enable-cache: true
+
+      - run: echo "cache_id=$(date --utc '+%V')" >> $GITHUB_ENV
+
+      - name: Cache mkdocs-material assets
+        uses: actions/cache@v4
+        with:
+          key: mkdocs-material-${{ env.cache_id }}
+          path: .cache
+          restore-keys: |
+            mkdocs-material-
+
+      # --only-group, not --group: a bare `uv run` or `--group docs` would also
+      # sync the project and the dev group, which pins gdal==3.10.0 and pulls in
+      # pyspark. Both steps below carry the flag.
+      - name: Install the docs toolchain
+        run: uv sync --only-group docs
+
+      # --strict turns broken links and unresolved API references into errors.
+      - name: Build the site
+        run: uv run --only-group docs mkdocs build --strict
+
+      - name: Deploy to gh-pages
+        if: github.event_name == 'push' && github.ref == 'refs/heads/master'
+        run: uv run --only-group docs mkdocs gh-deploy --force

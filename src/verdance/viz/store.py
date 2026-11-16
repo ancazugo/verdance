@@ -43,10 +43,12 @@ def connect(path: Path | str, read_only: bool = False) -> duckdb.DuckDBPyConnect
 
 
 def unit_table(layer_name: str) -> str:
+    """DuckDB table name holding a geo level's units, derived from the layer name."""
     return "units_" + re.sub(r"\W", "_", layer_name.lower())
 
 
 def fingerprint(catalog: Catalog, include_trees: bool) -> str:
+    """Hash of the inputs a store was built from, so a stale viz.duckdb is detected."""
     h = hashlib.sha256(f"{STORE_VERSION}|{include_trees}|{catalog.crs}".encode())
     for p in catalog.fingerprint_paths():
         if not include_trees and catalog.trees and p in catalog.trees.paths:
@@ -526,6 +528,7 @@ def _metric_meta(metric: str, module: str, catalog: Catalog, layer: str, layer_m
 
 
 def read_meta(con: duckdb.DuckDBPyConnection) -> dict:
+    """The store's metadata table, decoded from JSON."""
     return {k: json.loads(v) for k, v in con.execute("SELECT key, value FROM meta").fetchall()}
 
 

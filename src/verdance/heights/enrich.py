@@ -44,10 +44,15 @@ def _key(payload) -> str:
 
 
 def source_cache_path(cfg: VerdanceConfig, source) -> Path:
+    """Cache path for one height source's results, keyed by the source and the buildings cache."""
     return _db_dir(cfg) / "heights" / f"{source.label}_{_key([source.cache_key(), buildings_fingerprint(cfg)])}.parquet"
 
 
 def heights_cache_path(cfg: VerdanceConfig) -> Path:
+    """Cache path for the combined height table, keyed by the whole source chain.
+
+    A different chain builds a new table rather than reusing a stale one.
+    """
     h = cfg.heights
     payload = {
         "sources": [[s.source, s.label, s.options] for s in h.sources],

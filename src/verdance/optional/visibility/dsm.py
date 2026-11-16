@@ -22,6 +22,12 @@ from rasterio.enums import Resampling
 
 @dataclass
 class DSM:
+    """The rasterised surfaces a sightline is traced over.
+
+    Holds the combined surface, the buildings-only surface used to decide what
+    still blocks a view inside a crown, and the crown identifiers, all on one
+    grid anchored at ``(x0, y0)`` with pixel size ``res``.
+    """
     dsm: np.ndarray  # float32: max(buildings, ground + vegetation), absolute
     bldg: np.ndarray  # float32: buildings, else ground (what still blocks inside a target's crown)
     crown_id: np.ndarray  # int32 (layers, rows, cols): target index + 1 inside target crowns, else 0

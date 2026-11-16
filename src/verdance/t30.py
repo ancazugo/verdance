@@ -1,3 +1,10 @@
+"""T30 — the "30" of the rule: canopy cover per census unit.
+
+Computes the share of each sub-geo unit under tree canopy, from local CHM
+raster tiles, the Meta/WRI canopy height model, a Google Earth Engine asset or
+tree polygons, whichever the config sets.
+"""
+
 import os
 from pathlib import Path
 

@@ -23,6 +23,7 @@ DEM_SOURCES = {
 
 
 def uses_terrain(cfg: VerdanceConfig) -> bool:
+    """True when a terrain source is configured, so Visibility rays start from ground level."""
     return cfg.terrain.source is not None
 
 

@@ -45,6 +45,11 @@ MAX_TREE_HEIGHT_M = 100.0
 
 @dataclass(frozen=True)
 class SegmentationParams:
+    """Tunable parameters of the crown-segmentation pipeline.
+
+    Set through ``tree_segmentation.preset``, with per-field overrides under
+    ``tree_segmentation.params``.
+    """
     # Smoothing before detection: "median" (kernel width), "gaussian" (sigma) or "none"; size in metres
     smoothing: str = "median"
     smooth_size: float = 5.0
@@ -311,6 +316,7 @@ def dalponte2016(
 
 @dataclass
 class Segmentation:
+    """The result of segmenting one CHM block: crown labels and their treetops."""
     labels: np.ndarray       # int32 crown labels (0 = none); label i is treetop i-1
     rows: np.ndarray         # treetop rows
     cols: np.ndarray         # treetop cols
@@ -537,6 +543,7 @@ def segment_raster(
 # --------------------------------------------------------------------------- #
 
 def chm_source(cfg) -> str:
+    """Which CHM the Trees process reads: ``chm_tiles`` when one is configured, else ``meta``."""
     return cfg.tree_segmentation.source or ("chm_tiles" if cfg.data.chm_tiles_dir else "meta")
 
 

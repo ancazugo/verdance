@@ -1,3 +1,9 @@
+"""Loading and validating a verdance YAML config into :class:`VerdanceConfig`.
+
+Unknown keys, missing required sections and a geographic CRS are rejected here,
+so a typo fails in seconds rather than part-way through a long Spark run.
+"""
+
 from dataclasses import fields
 from pathlib import Path
 
@@ -36,6 +42,11 @@ def _reject_unknown(section: dict, valid: set[str], where: str) -> None:
 
 
 def load_config(path: str | Path) -> VerdanceConfig:
+    """Load and validate a verdance YAML config into a `VerdanceConfig`.
+
+    Unknown keys, missing required sections and a geographic `crs` are rejected
+    here rather than part-way through a long Spark run.
+    """
     with open(path) as f:
         raw = yaml.safe_load(f)
 

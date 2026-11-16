@@ -1,3 +1,10 @@
+"""Total tree count per census unit.
+
+Each tree is counted once, in the unit containing its centroid, with no size
+filter — unlike :mod:`verdance.t3`, which counts only trees above the height
+and area thresholds.
+"""
+
 from pathlib import Path
 
 import time

@@ -133,6 +133,7 @@ def _tile_xy(lon: float, lat: float, zoom: int) -> tuple[int, int]:
 
 
 def quadkey(x: int, y: int, zoom: int) -> str:
+    """Bing-style quadkey of a web-mercator tile, the form Meta names its CHM tiles by."""
     digits = []
     for i in range(zoom, 0, -1):
         mask = 1 << (i - 1)

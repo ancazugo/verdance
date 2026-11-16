@@ -82,6 +82,7 @@ class UnitLayer:
 
 @dataclass
 class TreeSource:
+    """Tree crown files backing the map, with the columns holding height and area."""
     paths: list[Path]
     height_col: str
     area_col: str
@@ -89,12 +90,14 @@ class TreeSource:
 
 @dataclass
 class ParkSource:
+    """Park polygons backing the map, and the minimum area T300 counted."""
     path: Path
     min_area_ha: float | None  # parks below this are ignored by T300 (park_min_area_ha)
 
 
 @dataclass
 class Catalog:
+    """Everything the map viewer needs to find and interpret one study area's outputs."""
     study_area_name: str
     crs: str
     base_dir: Path
