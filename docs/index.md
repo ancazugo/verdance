@@ -1,8 +1,3 @@
----
-hide:
-  - navigation
----
-
 <div class="verdance-hero" markdown>
 ![verdance](assets/logos/verdance-logo-light.svg#only-light)
 ![verdance](assets/logos/verdance-logo-dark.svg#only-dark)
@@ -92,14 +87,3 @@ meeting each criterion).
 
 [Get started](quickstart.md){ .md-button .md-button--primary }
 [Configuration reference](configuration.md){ .md-button }
-
-## Where to go next
-
-| | |
-|---|---|
-| [Installation](installation.md) | Python, Java, the optional extras and Docker |
-| [Quick start](quickstart.md) | A first run end to end, and where files land |
-| [Configuration](configuration.md) | Every config key, generated from the schema |
-| [Modules](modules.md) | What T3, T30, T300, Trees, Heights and Visibility each do |
-| [Data sources](data-sources.md) | Every supported dataset and its licence |
-| [API reference](api/index.md) | Using verdance as a library |

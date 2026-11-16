@@ -1,10 +1,7 @@
 """SQL literal escaping (quotes in census codes) and per-module run manifests."""
 
-import os
-import sys
 
 import pandas as pd
-import pytest
 
 from verdance.utils.data_processing import sql_str
 from verdance.utils.manifest import read_run_manifest, warn_on_incomplete_runs, write_run_manifest
@@ -49,22 +46,6 @@ def test_warn_on_incomplete_runs_flags_failures(tmp_path):
     write_run_manifest(bad, "T3", attempted=["A", "B"], succeeded=["A"], failed=["B"])
     incomplete = warn_on_incomplete_runs(tmp_path, {"T30": good, "T3": bad, "T300": tmp_path / "missing"})
     assert incomplete == ["T3"]
-
-
-@pytest.fixture(scope="module")
-def spark():
-    pytest.importorskip("pyspark")
-    from pyspark.sql import SparkSession
-
-    from verdance.utils.constants import JAVA_HOME
-
-    if JAVA_HOME:
-        os.environ["JAVA_HOME"] = JAVA_HOME
-    os.environ.setdefault("PYSPARK_PYTHON", sys.executable)
-    s = (SparkSession.builder.master("local[1]").appName("verdance-sqlstr-test")
-         .config("spark.ui.enabled", "false").config("spark.sql.shuffle.partitions", "1").getOrCreate())
-    yield s
-    s.stop()
 
 
 def test_sql_str_round_trips_through_spark(spark):

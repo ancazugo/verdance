@@ -34,6 +34,17 @@ def _user() -> str:
         return str(os.getuid())
 
 
+# Sedona's jars and the repository holding the GeoTools wrapper. Module-level so
+# anything else that has to build a Sedona session — notably the test suite,
+# which needs its own tuning — resolves the same jars rather than a second copy
+# of these coordinates that can drift.
+SEDONA_PACKAGES = (
+    "org.apache.sedona:sedona-spark-shaded-3.5_2.12:1.9.0,"
+    "org.datasyslab:geotools-wrapper:1.9.0-33.5"
+)
+SEDONA_REPOSITORIES = "https://artifacts.unidata.ucar.edu/repository/unidata-all"
+
+
 def get_spark() -> SparkSession:
     """Create (or reuse) a local Sedona-enabled SparkSession with the project's JAR packages.
 
@@ -67,15 +78,8 @@ def get_spark() -> SparkSession:
 
     builder = (
         SedonaContext.builder()
-        .config(
-            "spark.jars.packages",
-            "org.apache.sedona:sedona-spark-shaded-3.5_2.12:1.9.0,"
-            "org.datasyslab:geotools-wrapper:1.9.0-33.5",
-        )
-        .config(
-            "spark.jars.repositories",
-            "https://artifacts.unidata.ucar.edu/repository/unidata-all",
-        )
+        .config("spark.jars.packages", SEDONA_PACKAGES)
+        .config("spark.jars.repositories", SEDONA_REPOSITORIES)
         .config("spark.sql.debug.maxToStringFields", 10000)
         .config("spark.default.parallelism", 200)
         .config("spark.sql.adaptive.coalescePartitions.enabled", False)

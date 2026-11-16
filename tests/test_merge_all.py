@@ -1,7 +1,5 @@
 """Merge's unit table: every unit with canopy, trees or buildings gets a row (local Spark, no Sedona)."""
 
-import os
-import sys
 
 import pandas as pd
 import pytest
@@ -9,20 +7,6 @@ import pytest
 pyspark = pytest.importorskip("pyspark")
 
 from verdance.merge import fill_unit_counts, merge_all
-
-
-@pytest.fixture(scope="module")
-def spark():
-    from verdance.utils.constants import JAVA_HOME
-    from pyspark.sql import SparkSession
-
-    if JAVA_HOME:
-        os.environ["JAVA_HOME"] = JAVA_HOME
-    os.environ.setdefault("PYSPARK_PYTHON", sys.executable)  # as get_spark does
-    s = (SparkSession.builder.master("local[1]").appName("verdance-merge-test")
-         .config("spark.ui.enabled", "false").config("spark.sql.shuffle.partitions", "1").getOrCreate())
-    yield s
-    s.stop()
 
 
 def _view(spark, name, df):

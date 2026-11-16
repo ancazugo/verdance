@@ -18,16 +18,6 @@ BUFFER = 50
 
 
 @pytest.fixture(scope="module")
-def sedona():
-    from verdance.utils.sedona_config import get_spark
-
-    s = get_spark()
-    s.sparkContext.setLogLevel("ERROR")
-    yield s
-    s.stop()
-
-
-@pytest.fixture(scope="module")
 def scene(sedona):
     """Three buildings 50 m apart in reach terms: A has two trees, B and C none."""
     sfx = view_suffix(GEO)
