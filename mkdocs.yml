@@ -29,6 +29,20 @@ markdown_extensions:
 
 plugins:
   - search
+  - mkdocstrings:
+      handlers:
+        python:
+          # `paths` is a handler-level key, a sibling of `options` — nested
+          # inside `options` it is silently ignored. It lets Griffe read the
+          # package statically, so the docs build never installs the project.
+          paths: ["src"]
+          options:
+            docstring_style: google
+            filters: ["!^_"]
+            show_source: true
+            show_root_full_path: false
+            members_order: source
 
 nav:
   - Home: index.md
+  - Configuration: configuration.md
