@@ -9,6 +9,14 @@ repo_name: sdgresearch/verdance
 exclude_docs: |
   superpowers/
 
+# Anchors are only INFO by default, so a cross-page link to a heading that no
+# longer exists would pass --strict silently. The README this site was split
+# from was full of such links, so they are errors here.
+validation:
+  anchors: warn
+  absolute_links: info
+  unrecognized_links: warn
+
 theme:
   name: material
   logo: assets/logos/verdance-icon-mono-inverse.svg
@@ -71,6 +79,8 @@ nav:
   - Modules: modules.md
   - Data sources: data-sources.md
   - Visualising results: visualising.md
+  - Troubleshooting: troubleshooting.md
+  - Development: development.md
   - API reference:
       - api/index.md
       - Analysis modules: api/analysis.md
