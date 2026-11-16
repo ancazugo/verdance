@@ -60,6 +60,7 @@ verdance = "verdance.cli:main"
 
 [project.urls]
 Homepage = "https://github.com/sdgresearch/verdance"
+Documentation = "https://sdgresearch.github.io/verdance/"
 Repository = "https://github.com/sdgresearch/verdance"
 Issues = "https://github.com/sdgresearch/verdance/issues"
 

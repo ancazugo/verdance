@@ -7,7 +7,16 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.4.0] - 2026-11-16
+
 ### Added
+
+- A documentation site at <https://sdgresearch.github.io/verdance/>, built with
+  MkDocs Material and deployed by GitHub Actions. The config reference and the
+  API reference are generated from the source, so neither can drift from the
+  code; the README is now a landing page rather than the manual.
+- A logo set (`assets/logo/`) in icon, wordmark and full-logo variants, each in
+  light, dark and monochrome, as SVG and PNG.
 
 - `verdance.run(config, process, ...)` — a programmatic entry point mirroring the
   CLI for notebooks and scripts — plus `verdance.load_config` and
@@ -107,5 +116,6 @@ import package, console command and PyPI name are all `verdance`.
 - A Docker image bundling Python 3.12, OpenJDK 17, the Sedona jars and DuckDB's
   spatial extension.
 
-[Unreleased]: https://github.com/sdgresearch/verdance/compare/v0.3.0...HEAD
+[Unreleased]: https://github.com/sdgresearch/verdance/compare/v0.4.0...HEAD
+[0.4.0]: https://github.com/sdgresearch/verdance/compare/v0.3.0...v0.4.0
 [0.3.0]: https://github.com/sdgresearch/verdance/releases/tag/v0.3.0
