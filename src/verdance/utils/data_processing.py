@@ -1,3 +1,9 @@
+"""Shared helpers for moving data between Spark, GeoPandas and disk.
+
+Includes the SQL literal quoting every module uses to build Sedona queries
+safely, geometry filtering helpers, and the single-part file writers.
+"""
+
 import re
 import shutil
 import tempfile

@@ -1,3 +1,10 @@
+"""T3 — the "3" of the rule: trees within a buffer of each building.
+
+Counts the tree crowns whose centroid falls within ``--buffer`` metres of each
+building, keeping only trees above the ``--tree_height`` and ``--tree_area``
+thresholds, and writes one CSV per geo code.
+"""
+
 from pathlib import Path
 
 import time

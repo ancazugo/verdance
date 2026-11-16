@@ -97,47 +97,59 @@ file; nested sections map to the dataclasses that follow.
 ::: verdance.config.schema.DataPaths
     options:
       heading_level: 4
+      show_root_heading: true
 
 ::: verdance.config.schema.ColumnMapping
     options:
       heading_level: 4
+      show_root_heading: true
 
 ::: verdance.config.schema.OutputPaths
     options:
       heading_level: 4
+      show_root_heading: true
 
 ::: verdance.config.schema.OSMConfig
     options:
       heading_level: 4
+      show_root_heading: true
 
 ::: verdance.config.schema.OvertureConfig
     options:
       heading_level: 4
+      show_root_heading: true
 
 ::: verdance.config.schema.OpenBuildingsConfig
     options:
       heading_level: 4
+      show_root_heading: true
 
 ::: verdance.config.schema.TreeSegmentationConfig
     options:
       heading_level: 4
+      show_root_heading: true
 
 ::: verdance.config.schema.HeightsConfig
     options:
       heading_level: 4
+      show_root_heading: true
 
 ::: verdance.config.schema.HeightSourceSpec
     options:
       heading_level: 4
+      show_root_heading: true
 
 ::: verdance.config.schema.VisibilityConfig
     options:
       heading_level: 4
+      show_root_heading: true
 
 ::: verdance.config.schema.TerrainConfig
     options:
       heading_level: 4
+      show_root_heading: true
 
 ::: verdance.config.schema.TileSystemConfig
     options:
       heading_level: 4
+      show_root_heading: true

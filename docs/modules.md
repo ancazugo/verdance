@@ -157,6 +157,7 @@ Building heights come from the `Heights` chain (built on the first Visibility ru
 terrain:
   source: fabdem      # fabdem (default) | copernicus | nasadem | /path/to/dtm.tif or directory | null (flat)
   resolution: 30      # GEE download resolution (m), resampled bilinearly onto the visibility grid
+```
 
 The terrain sources and their licences are listed under [data sources](data-sources.md#terrain-sources).
 

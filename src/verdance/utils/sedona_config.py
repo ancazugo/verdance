@@ -1,3 +1,10 @@
+"""Creating the Spark session with Apache Sedona registered.
+
+Resolves the Java runtime, sizes the driver heap, points Spark's temporary and
+jar directories at the configured caches, and registers Sedona's spatial types
+and functions.
+"""
+
 import getpass
 import os
 import sys

@@ -1,3 +1,9 @@
+"""Canopy cover within a buffer of each building.
+
+The per-building counterpart of :mod:`verdance.t30`: the same canopy sources,
+reported for the neighbourhood of every footprint rather than per census unit.
+"""
+
 from pathlib import Path
 
 import time

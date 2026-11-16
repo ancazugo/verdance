@@ -1,9 +1,12 @@
-"""The public surface the documentation site renders must carry docstrings.
+"""The config schema carries the attribute docstrings the site generates from.
 
-mkdocstrings renders whatever it finds; a function with no docstring becomes a
-bare signature on the site, which is worse than no API page. These tests pin
-the modules `docs/api/` and `docs/configuration.md` render, so a new public
-function cannot reach the site undocumented.
+`test_verdance_config_fields_have_attribute_docstrings` is the one that matters
+here: it pins the exact shape Griffe reads, so a field documented with a `#`
+comment — which renders as nothing — cannot slip back in.
+
+Coverage of everything the site renders is handled by
+`tests/test_docs_consistency.py`, which derives its targets from the `:::`
+directives rather than the hand-maintained list below.
 """
 
 import ast

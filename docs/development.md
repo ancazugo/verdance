@@ -18,6 +18,29 @@ verdance run -c /tmp/verdance_synth/config.yaml -p Merge --t3_buffers 50
 
 The other scripts in `scripts/` prepare inputs for particular cities and evaluate tree segmentation and building heights against reference data.
 
+## Documentation
+
+The site at <https://sdgresearch.github.io/verdance/> is built with MkDocs Material from
+`docs/`. The config and API references are generated from the source by mkdocstrings, so
+editing a docstring updates the site.
+
+The docs toolchain is a separate dependency group, installed without the project itself —
+mkdocstrings reads the package statically, so building the site needs neither Spark, GDAL
+nor Java:
+
+```bash
+uv sync --only-group docs
+uv run --only-group docs mkdocs serve    # live preview at http://127.0.0.1:8000
+uv run --only-group docs mkdocs build --strict   # what CI runs
+```
+
+`--strict` turns broken links, missing anchors and unresolved API references into errors.
+Run it before pushing: the `docs` workflow builds on every pull request that touches
+`docs/`, `mkdocs.yml` or `src/`, and deploys to the `gh-pages` branch when master moves.
+
+Pages under `docs/superpowers/` are internal design documents and are excluded from the
+published site.
+
 ## Releasing
 
 Releases are published to PyPI by GitHub Actions through [trusted publishing](https://docs.pypi.org/trusted-publishers/),
@@ -39,9 +62,3 @@ uploads them. To check a build locally first:
 rm -rf dist && uv build                   # dist/verdance-<version>.tar.gz and .whl
 uvx twine check --strict dist/*
 ```
-
-
-## Licence and data
-
-
-verdance is released under the [MIT licence](https://github.com/sdgresearch/verdance/blob/master/LICENSE). The data it downloads keeps its own licence — notably GlobalBuildingAtlas heights (`gba`) are CC BY-NC 4.0 and FABDEM terrain is CC BY-NC-SA 4.0, both non-commercial only; the tables above list each source's licence. The bundled map viewer includes [MapLibre GL JS](https://maplibre.org/) (BSD-3-Clause).

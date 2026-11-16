@@ -1,3 +1,9 @@
+"""Loading and validating a verdance YAML config into :class:`VerdanceConfig`.
+
+Unknown keys, missing required sections and a geographic CRS are rejected here,
+so a typo fails in seconds rather than part-way through a long Spark run.
+"""
+
 from dataclasses import fields
 from pathlib import Path
 

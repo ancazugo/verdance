@@ -1,3 +1,9 @@
+"""T300 — the "300" of the rule: distance from each building to green space.
+
+Measures both the road-network walking distance and the straight-line distance
+from every building to the nearest public park access point.
+"""
+
 from pathlib import Path
 
 import time

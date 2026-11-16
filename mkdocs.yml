@@ -48,6 +48,7 @@ extra_css:
 markdown_extensions:
   - admonition
   - attr_list
+  - md_in_html
   - tables
   - pymdownx.details
   - pymdownx.highlight
@@ -81,6 +82,7 @@ nav:
   - Visualising results: visualising.md
   - Troubleshooting: troubleshooting.md
   - Development: development.md
+  - Licence and data: licence.md
   - API reference:
       - api/index.md
       - Analysis modules: api/analysis.md
