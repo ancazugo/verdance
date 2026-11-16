@@ -1,0 +1,34 @@
+site_name: verdance
+site_description: Measure the 3-30-300 rule of urban greening for any city, using Apache Sedona
+site_url: https://sdgresearch.github.io/verdance/
+repo_url: https://github.com/sdgresearch/verdance
+repo_name: sdgresearch/verdance
+
+# Internal design documents and implementation plans live under docs/ so they
+# travel with the code, but they are not part of the published site.
+exclude_docs: |
+  superpowers/
+
+theme:
+  name: material
+  features:
+    - navigation.sections
+    - navigation.top
+    - navigation.indexes
+    - content.code.copy
+
+markdown_extensions:
+  - admonition
+  - attr_list
+  - tables
+  - pymdownx.details
+  - pymdownx.highlight
+  - pymdownx.superfences
+  - toc:
+      permalink: true
+
+plugins:
+  - search
+
+nav:
+  - Home: index.md
