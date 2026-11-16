@@ -1,0 +1,1369 @@
+
+<!doctype html>
+<html lang="en" class="no-js">
+  <head>
+    
+      <meta charset="utf-8">
+      <meta name="viewport" content="width=device-width,initial-scale=1">
+      
+        <meta name="description" content="Measure the 3-30-300 rule of urban greening for any city, using Apache Sedona">
+      
+      
+      
+        <link rel="canonical" href="https://sdgresearch.github.io/verdance/modules/">
+      
+      
+        <link rel="prev" href="../configuration/">
+      
+      
+        <link rel="next" href="../data-sources/">
+      
+      
+        
+      
+      
+      <link rel="icon" href="../assets/logos/verdance-icon-light.svg">
+      <meta name="generator" content="mkdocs-1.6.1, mkdocs-material-9.7.7">
+    
+    
+      
+        <title>Modules - verdance</title>
+      
+    
+    
+      <link rel="stylesheet" href="../assets/stylesheets/main.ec1eaa64.min.css">
+      
+        
+        <link rel="stylesheet" href="../assets/stylesheets/palette.ab4e12ef.min.css">
+      
+      
+
+
+    
+    
+      
+    
+    
+      
+        
+        
+        <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+        <link rel="stylesheet" href="https://fonts.googleapis.com/css?family=Roboto:300,300i,400,400i,700,700i%7CRoboto+Mono:400,400i,700,700i&display=fallback">
+        <style>:root{--md-text-font:"Roboto";--md-code-font:"Roboto Mono"}</style>
+      
+    
+    
+      <link rel="stylesheet" href="../assets/_mkdocstrings.css">
+    
+      <link rel="stylesheet" href="../assets/stylesheets/verdance.css">
+    
+    <script>__md_scope=new URL("..",location),__md_hash=e=>[...e].reduce(((e,_)=>(e<<5)-e+_.charCodeAt(0)),0),__md_get=(e,_=localStorage,t=__md_scope)=>JSON.parse(_.getItem(t.pathname+"."+e)),__md_set=(e,_,t=localStorage,a=__md_scope)=>{try{t.setItem(a.pathname+"."+e,JSON.stringify(_))}catch(e){}}</script>
+    
+      
+
+    
+    
+  </head>
+  
+  
+    
+    
+      
+    
+    
+    
+    
+    <body dir="ltr" data-md-color-scheme="default" data-md-color-primary="custom" data-md-color-accent="custom">
+  
+    
+    <input class="md-toggle" data-md-toggle="drawer" type="checkbox" id="__drawer" autocomplete="off">
+    <input class="md-toggle" data-md-toggle="search" type="checkbox" id="__search" autocomplete="off">
+    <label class="md-overlay" for="__drawer"></label>
+    <div data-md-component="skip">
+      
+        
+        <a href="#modules" class="md-skip">
+          Skip to content
+        </a>
+      
+    </div>
+    <div data-md-component="announce">
+      
+    </div>
+    
+    
+      
+
+  
+
+<header class="md-header md-header--shadow" data-md-component="header">
+  <nav class="md-header__inner md-grid" aria-label="Header">
+    <a href=".." title="verdance" class="md-header__button md-logo" aria-label="verdance" data-md-component="logo">
+      
+  <img src="../assets/logos/verdance-icon-mono-inverse.svg" alt="logo">
+
+    </a>
+    <label class="md-header__button md-icon" for="__drawer">
+      
+      <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M3 6h18v2H3zm0 5h18v2H3zm0 5h18v2H3z"/></svg>
+    </label>
+    <div class="md-header__title" data-md-component="header-title">
+      <div class="md-header__ellipsis">
+        <div class="md-header__topic">
+          <span class="md-ellipsis">
+            verdance
+          </span>
+        </div>
+        <div class="md-header__topic" data-md-component="header-topic">
+          <span class="md-ellipsis">
+            
+              Modules
+            
+          </span>
+        </div>
+      </div>
+    </div>
+    
+      
+        <form class="md-header__option" data-md-component="palette">
+  
+    
+    
+    
+    <input class="md-option" data-md-color-media="(prefers-color-scheme: light)" data-md-color-scheme="default" data-md-color-primary="custom" data-md-color-accent="custom"  aria-label="Switch to dark mode"  type="radio" name="__palette" id="__palette_0">
+    
+      <label class="md-header__button md-icon" title="Switch to dark mode" for="__palette_1" hidden>
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M12 8a4 4 0 0 0-4 4 4 4 0 0 0 4 4 4 4 0 0 0 4-4 4 4 0 0 0-4-4m0 10a6 6 0 0 1-6-6 6 6 0 0 1 6-6 6 6 0 0 1 6 6 6 6 0 0 1-6 6m8-9.31V4h-4.69L12 .69 8.69 4H4v4.69L.69 12 4 15.31V20h4.69L12 23.31 15.31 20H20v-4.69L23.31 12z"/></svg>
+      </label>
+    
+  
+    
+    
+    
+    <input class="md-option" data-md-color-media="(prefers-color-scheme: dark)" data-md-color-scheme="slate" data-md-color-primary="custom" data-md-color-accent="custom"  aria-label="Switch to light mode"  type="radio" name="__palette" id="__palette_1">
+    
+      <label class="md-header__button md-icon" title="Switch to light mode" for="__palette_0" hidden>
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M12 18c-.89 0-1.74-.2-2.5-.55C11.56 16.5 13 14.42 13 12s-1.44-4.5-3.5-5.45C10.26 6.2 11.11 6 12 6a6 6 0 0 1 6 6 6 6 0 0 1-6 6m8-9.31V4h-4.69L12 .69 8.69 4H4v4.69L.69 12 4 15.31V20h4.69L12 23.31 15.31 20H20v-4.69L23.31 12z"/></svg>
+      </label>
+    
+  
+</form>
+      
+    
+    
+      <script>var palette=__md_get("__palette");if(palette&&palette.color){if("(prefers-color-scheme)"===palette.color.media){var media=matchMedia("(prefers-color-scheme: light)"),input=document.querySelector(media.matches?"[data-md-color-media='(prefers-color-scheme: light)']":"[data-md-color-media='(prefers-color-scheme: dark)']");palette.color.media=input.getAttribute("data-md-color-media"),palette.color.scheme=input.getAttribute("data-md-color-scheme"),palette.color.primary=input.getAttribute("data-md-color-primary"),palette.color.accent=input.getAttribute("data-md-color-accent")}for(var[key,value]of Object.entries(palette.color))document.body.setAttribute("data-md-color-"+key,value)}</script>
+    
+    
+    
+      
+      
+        <label class="md-header__button md-icon" for="__search">
+          
+          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M9.5 3A6.5 6.5 0 0 1 16 9.5c0 1.61-.59 3.09-1.56 4.23l.27.27h.79l5 5-1.5 1.5-5-5v-.79l-.27-.27A6.52 6.52 0 0 1 9.5 16 6.5 6.5 0 0 1 3 9.5 6.5 6.5 0 0 1 9.5 3m0 2C7 5 5 7 5 9.5S7 14 9.5 14 14 12 14 9.5 12 5 9.5 5"/></svg>
+        </label>
+        <div class="md-search" data-md-component="search" role="dialog">
+  <label class="md-search__overlay" for="__search"></label>
+  <div class="md-search__inner" role="search">
+    <form class="md-search__form" name="search">
+      <input type="text" class="md-search__input" name="query" aria-label="Search" placeholder="Search" autocapitalize="off" autocorrect="off" autocomplete="off" spellcheck="false" data-md-component="search-query" required>
+      <label class="md-search__icon md-icon" for="__search">
+        
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M9.5 3A6.5 6.5 0 0 1 16 9.5c0 1.61-.59 3.09-1.56 4.23l.27.27h.79l5 5-1.5 1.5-5-5v-.79l-.27-.27A6.52 6.52 0 0 1 9.5 16 6.5 6.5 0 0 1 3 9.5 6.5 6.5 0 0 1 9.5 3m0 2C7 5 5 7 5 9.5S7 14 9.5 14 14 12 14 9.5 12 5 9.5 5"/></svg>
+        
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M20 11v2H8l5.5 5.5-1.42 1.42L4.16 12l7.92-7.92L13.5 5.5 8 11z"/></svg>
+      </label>
+      <nav class="md-search__options" aria-label="Search">
+        
+        <button type="reset" class="md-search__icon md-icon" title="Clear" aria-label="Clear" tabindex="-1">
+          
+          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M19 6.41 17.59 5 12 10.59 6.41 5 5 6.41 10.59 12 5 17.59 6.41 19 12 13.41 17.59 19 19 17.59 13.41 12z"/></svg>
+        </button>
+      </nav>
+      
+    </form>
+    <div class="md-search__output">
+      <div class="md-search__scrollwrap" tabindex="0" data-md-scrollfix>
+        <div class="md-search-result" data-md-component="search-result">
+          <div class="md-search-result__meta">
+            Initializing search
+          </div>
+          <ol class="md-search-result__list" role="presentation"></ol>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+      
+    
+    
+      <div class="md-header__source">
+        <a href="https://github.com/sdgresearch/verdance" title="Go to repository" class="md-source" data-md-component="source">
+  <div class="md-source__icon md-icon">
+    
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 448 512"><!--! Font Awesome Free 7.1.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2025 Fonticons, Inc.--><path d="M439.6 236.1 244 40.5c-5.4-5.5-12.8-8.5-20.4-8.5s-15 3-20.4 8.4L162.5 81l51.5 51.5c27.1-9.1 52.7 16.8 43.4 43.7l49.7 49.7c34.2-11.8 61.2 31 35.5 56.7-26.5 26.5-70.2-2.9-56-37.3L240.3 199v121.9c25.3 12.5 22.3 41.8 9.1 55-6.4 6.4-15.2 10.1-24.3 10.1s-17.8-3.6-24.3-10.1c-17.6-17.6-11.1-46.9 11.2-56v-123c-20.8-8.5-24.6-30.7-18.6-45L142.6 101 8.5 235.1C3 240.6 0 247.9 0 255.5s3 15 8.5 20.4l195.6 195.7c5.4 5.4 12.7 8.4 20.4 8.4s15-3 20.4-8.4l194.7-194.7c5.4-5.4 8.4-12.8 8.4-20.4s-3-15-8.4-20.4"/></svg>
+  </div>
+  <div class="md-source__repository">
+    sdgresearch/verdance
+  </div>
+</a>
+      </div>
+    
+  </nav>
+  
+</header>
+    
+    <div class="md-container" data-md-component="container">
+      
+      
+        
+          
+        
+      
+      <main class="md-main" data-md-component="main">
+        <div class="md-main__inner md-grid">
+          
+            
+              
+              <div class="md-sidebar md-sidebar--primary" data-md-component="sidebar" data-md-type="navigation" >
+                <div class="md-sidebar__scrollwrap">
+                  <div class="md-sidebar__inner">
+                    
+
+
+
+<nav class="md-nav md-nav--primary" aria-label="Navigation" data-md-level="0">
+  <label class="md-nav__title" for="__drawer">
+    <a href=".." title="verdance" class="md-nav__button md-logo" aria-label="verdance" data-md-component="logo">
+      
+  <img src="../assets/logos/verdance-icon-mono-inverse.svg" alt="logo">
+
+    </a>
+    verdance
+  </label>
+  
+    <div class="md-nav__source">
+      <a href="https://github.com/sdgresearch/verdance" title="Go to repository" class="md-source" data-md-component="source">
+  <div class="md-source__icon md-icon">
+    
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 448 512"><!--! Font Awesome Free 7.1.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2025 Fonticons, Inc.--><path d="M439.6 236.1 244 40.5c-5.4-5.5-12.8-8.5-20.4-8.5s-15 3-20.4 8.4L162.5 81l51.5 51.5c27.1-9.1 52.7 16.8 43.4 43.7l49.7 49.7c34.2-11.8 61.2 31 35.5 56.7-26.5 26.5-70.2-2.9-56-37.3L240.3 199v121.9c25.3 12.5 22.3 41.8 9.1 55-6.4 6.4-15.2 10.1-24.3 10.1s-17.8-3.6-24.3-10.1c-17.6-17.6-11.1-46.9 11.2-56v-123c-20.8-8.5-24.6-30.7-18.6-45L142.6 101 8.5 235.1C3 240.6 0 247.9 0 255.5s3 15 8.5 20.4l195.6 195.7c5.4 5.4 12.7 8.4 20.4 8.4s15-3 20.4-8.4l194.7-194.7c5.4-5.4 8.4-12.8 8.4-20.4s-3-15-8.4-20.4"/></svg>
+  </div>
+  <div class="md-source__repository">
+    sdgresearch/verdance
+  </div>
+</a>
+    </div>
+  
+  <ul class="md-nav__list" data-md-scrollfix>
+    
+      
+      
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href=".." class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Home
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../installation/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Installation
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../quickstart/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Quick start
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../configuration/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Configuration
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+    
+      
+      
+  
+  
+    
+  
+  
+  
+    <li class="md-nav__item md-nav__item--active">
+      
+      <input class="md-nav__toggle md-toggle" type="checkbox" id="__toc">
+      
+      
+        
+      
+      
+        <label class="md-nav__link md-nav__link--active" for="__toc">
+          
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Modules
+  
+
+    
+  </span>
+  
+  
+
+          <span class="md-nav__icon md-icon"></span>
+        </label>
+      
+      <a href="./" class="md-nav__link md-nav__link--active">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Modules
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+      
+        
+
+<nav class="md-nav md-nav--secondary" aria-label="Table of contents">
+  
+  
+  
+    
+  
+  
+    <label class="md-nav__title" for="__toc">
+      <span class="md-nav__icon md-icon"></span>
+      Table of contents
+    </label>
+    <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix>
+      
+        <li class="md-nav__item">
+  <a href="#usage" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Usage
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#canopy-cover-source-t30-t30_buildings" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Canopy cover source (T30, T30_buildings)
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#tree-segmentation-trees" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Tree segmentation (Trees)
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#building-heights-heights" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Building heights (Heights)
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#tree-visibility-visibility-optional" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Tree visibility (Visibility, optional)
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#merge-and-the-3-30-300-rule" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Merge and the 3-30-300 rule
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#per-building-outputs" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Per-building outputs
+      
+    </span>
+  </a>
+  
+</li>
+      
+    </ul>
+  
+</nav>
+      
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../data-sources/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Data sources
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../visualising/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Visualising results
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../troubleshooting/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Troubleshooting
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../development/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Development
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../licence/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Licence and data
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    
+    
+      
+        
+          
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+    
+    
+    
+      
+        
+        
+      
+    
+    
+    <li class="md-nav__item md-nav__item--section md-nav__item--nested">
+      
+        
+        
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_11" >
+        
+          
+          <div class="md-nav__link md-nav__container">
+            <a href="../api/" class="md-nav__link ">
+              
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    API reference
+  
+
+    
+  </span>
+  
+  
+
+            </a>
+            
+              
+              <label class="md-nav__link " for="__nav_11" id="__nav_11_label" tabindex="">
+                <span class="md-nav__icon md-icon"></span>
+              </label>
+            
+          </div>
+        
+        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_11_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_11">
+            <span class="md-nav__icon md-icon"></span>
+            
+  
+    API reference
+  
+
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../api/analysis/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Analysis modules
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../api/pipeline/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Pipeline
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../api/data-sources/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Data sources
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../api/optional/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Optional modules
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../api/utils/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Utilities
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+    
+  </ul>
+</nav>
+                  </div>
+                </div>
+              </div>
+            
+            
+              
+              <div class="md-sidebar md-sidebar--secondary" data-md-component="sidebar" data-md-type="toc" >
+                <div class="md-sidebar__scrollwrap">
+                  <div class="md-sidebar__inner">
+                    
+
+<nav class="md-nav md-nav--secondary" aria-label="Table of contents">
+  
+  
+  
+    
+  
+  
+    <label class="md-nav__title" for="__toc">
+      <span class="md-nav__icon md-icon"></span>
+      Table of contents
+    </label>
+    <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix>
+      
+        <li class="md-nav__item">
+  <a href="#usage" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Usage
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#canopy-cover-source-t30-t30_buildings" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Canopy cover source (T30, T30_buildings)
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#tree-segmentation-trees" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Tree segmentation (Trees)
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#building-heights-heights" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Building heights (Heights)
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#tree-visibility-visibility-optional" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Tree visibility (Visibility, optional)
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#merge-and-the-3-30-300-rule" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Merge and the 3-30-300 rule
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#per-building-outputs" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Per-building outputs
+      
+    </span>
+  </a>
+  
+</li>
+      
+    </ul>
+  
+</nav>
+                  </div>
+                </div>
+              </div>
+            
+          
+          
+            <div class="md-content" data-md-component="content">
+              
+              <article class="md-content__inner md-typeset">
+                
+                  
+
+
+  
+  
+
+
+<h1 id="modules">Modules<a class="headerlink" href="#modules" title="Permanent link">&para;</a></h1>
+<table>
+<thead>
+<tr>
+<th>Process</th>
+<th>What it computes</th>
+<th>Output (one CSV per geo code)</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>Trees</code></td>
+<td>Segments individual tree crowns from a canopy height model (local CHM tiles or the global Meta/WRI 1 m CHM) into <code>data.trees_dir</code>, for T3/Tree_count/Visibility</td>
+<td><code>trees_&lt;geo_code&gt;.parquet</code>: <code>treeID</code>, <code>height</code>, <code>area</code>, <code>top_x</code>, <code>top_y</code>, crown geometry</td>
+</tr>
+<tr>
+<td><code>T3</code></td>
+<td>Trees (height and area strictly above <code>--tree_height</code>/<code>--tree_area</code>) whose centroid lies within <code>--buffer</code> metres of each building</td>
+<td><code>building_id</code>, <code>tree_count_&lt;buffer&gt;m</code>, sub-geo code</td>
+</tr>
+<tr>
+<td><code>T30</code></td>
+<td>Canopy cover % per sub-geo unit, from CHM raster tiles, the Meta canopy height model on AWS, a GEE canopy-height asset, or tree polygons</td>
+<td>sub-geo code, <code>canopy_cover</code>, <code>total_pixels</code></td>
+</tr>
+<tr>
+<td><code>T30_buildings</code></td>
+<td>Canopy cover % within <code>--buffer</code> metres of each building (distributed Sedona <code>RS_ZonalStats</code> for raster sources), same canopy sources as T30</td>
+<td><code>building_id</code>, <code>tree_pixels</code>, <code>total_pixels</code>, <code>canopy_cover</code></td>
+</tr>
+<tr>
+<td><code>T300</code></td>
+<td>Road-network and Euclidean distance from each building to the nearest park</td>
+<td><code>building_id</code>, distances, closest park ids, sub-geo code</td>
+</tr>
+<tr>
+<td><code>Tree_count</code></td>
+<td>Total tree count per sub-geo unit, each tree counted once in the unit containing its centroid (no size filter, unlike T3)</td>
+<td>sub-geo code, <code>tree_count</code></td>
+</tr>
+<tr>
+<td><code>Heights</code></td>
+<td>A height for every building footprint from an ordered chain of sources (footprint attributes, GlobalBuildingAtlas, UT-GLOBUS, Open Buildings 2.5D Temporal, GHS-BUILT-H, local files)</td>
+<td><code>database/building_heights_&lt;key&gt;.parquet</code>: <code>building_height</code>, <code>height_source</code>, <code>height_quality</code></td>
+</tr>
+<tr>
+<td><code>Visibility</code> <em>(optional)</em></td>
+<td>Trees within <code>--buffer</code> metres that can be seen from some window of each building, with buildings and trees blocking the view</td>
+<td><code>building_id</code>, <code>visible_trees</code>, <code>visible_trees_ground</code>, <code>candidate_trees</code>, <code>n_floors</code>, <code>building_height</code>, <code>height_source</code>, sub-geo code</td>
+</tr>
+<tr>
+<td><code>Spectral</code> <em>(optional)</em></td>
+<td>Spectral indices (NDVI, NDWI, …) per sub-geo unit via Google Earth Engine: a per-pixel temporal composite over the date range (<code>--composite max</code>, the default, or <code>median</code>), then the spatial median over each unit</td>
+<td>sub-geo code, one column per index</td>
+</tr>
+<tr>
+<td><code>Merge</code></td>
+<td>Evaluates the 3-30-300 rule per building and consolidates all module outputs into <code>database/T3_30_300_spectral.parquet</code></td>
+<td>one row per geo unit (see <a href="#merge-and-the-3-30-300-rule">Merge</a>)</td>
+</tr>
+</tbody>
+</table>
+<h2 id="usage">Usage<a class="headerlink" href="#usage" title="Permanent link">&para;</a></h2>
+<p>Run one module at a time; <code>Merge</code> last. <code>verdance run --help</code> lists every option.</p>
+<div class="highlight"><pre><span></span><code>verdance<span class="w"> </span>run<span class="w"> </span>-c<span class="w"> </span>config.yaml<span class="w"> </span>-p<span class="w"> </span>Trees<span class="w">      </span><span class="c1"># optional: segment trees from a CHM into trees_dir</span>
+verdance<span class="w"> </span>run<span class="w"> </span>-c<span class="w"> </span>config.yaml<span class="w"> </span>-p<span class="w"> </span>T3<span class="w"> </span>--buffer<span class="w"> </span><span class="m">100</span>
+verdance<span class="w"> </span>run<span class="w"> </span>-c<span class="w"> </span>config.yaml<span class="w"> </span>-p<span class="w"> </span>T30
+verdance<span class="w"> </span>run<span class="w"> </span>-c<span class="w"> </span>config.yaml<span class="w"> </span>-p<span class="w"> </span>T30_buildings<span class="w"> </span>--buffer<span class="w"> </span><span class="m">100</span>
+verdance<span class="w"> </span>run<span class="w"> </span>-c<span class="w"> </span>config.yaml<span class="w"> </span>-p<span class="w"> </span>T300
+verdance<span class="w"> </span>run<span class="w"> </span>-c<span class="w"> </span>config.yaml<span class="w"> </span>-p<span class="w"> </span>Tree_count
+verdance<span class="w"> </span>run<span class="w"> </span>-c<span class="w"> </span>config.yaml<span class="w"> </span>-p<span class="w"> </span>Heights<span class="w">         </span><span class="c1"># building heights (Visibility builds them if missing)</span>
+verdance<span class="w"> </span>run<span class="w"> </span>-c<span class="w"> </span>config.yaml<span class="w"> </span>-p<span class="w"> </span>Visibility<span class="w"> </span>--buffer<span class="w"> </span><span class="m">50</span><span class="w">   </span><span class="c1"># optional: trees in view</span>
+verdance<span class="w"> </span>run<span class="w"> </span>-c<span class="w"> </span>config.yaml<span class="w"> </span>-p<span class="w"> </span>Spectral<span class="w">        </span><span class="c1"># optional, needs GEE</span>
+verdance<span class="w"> </span>run<span class="w"> </span>-c<span class="w"> </span>config.yaml<span class="w"> </span>-p<span class="w"> </span>Merge
+verdance<span class="w"> </span>viz<span class="w"> </span>-c<span class="w"> </span>config.yaml<span class="w">                    </span><span class="c1"># interactive map, see [Visualising results](visualising.md)</span>
+</code></pre></div>
+<p>Useful options:</p>
+<ul>
+<li><code>--geo_level</code> / <code>--sub_geo_level</code> — which levels of <code>columns.geo_levels</code> to iterate over / aggregate to (defaults: coarsest / finest); Merge's <code>--geo_level</code> defaults to the second-finest level instead</li>
+<li><code>--dggs h3|s2|geohash|a5|rhealpix --dggs_resolution N</code> — aggregate to grid cells instead of the finest census level (also settable as <code>dggs</code>/<code>dggs_resolution</code> in the config). Grid runs sit beside census-unit runs: T30, Tree_count and Merge write grid-suffixed outputs (<code>T30_h3_9/</code>, <code>database/T3_30_300_spectral_h3_9.parquet</code>), and the per-building modules (T3, T300, …) need not be re-run — Merge aggregates them through the grid's buildings overlay. With a grid, the rule's "30" uses each building's cell canopy. To add H3 res 9 to an existing run: <code>-p T30</code>, <code>-p Tree_count</code> and <code>-p Merge</code>, each with <code>--dggs h3 --dggs_resolution 9</code></li>
+<li><code>--geo_code CODE</code> — process a single geography instead of all</li>
+<li><code>--parallel --n_workers 4</code> — process geo codes concurrently (per-geo Spark views are isolated, so results match sequential runs)</li>
+<li><code>--no-overwrite</code> — skip geo codes whose output CSV already exists (resume an interrupted run)</li>
+<li><code>--query_method sql|rdd</code> — Sedona join strategy for T3 (default <code>sql</code>). <code>sql</code> uses an indexed spatial join and returns a row for <em>every</em> building, with <code>tree_count</code> 0 where no tree is in range; <code>rdd</code> omits those buildings (Merge zero-fills them, so merged totals match, but its per-geo CSVs are incomplete on their own). On the London region (2.83M buildings × 2.58M trees) <code>sql</code> took 47 s against 74 s for <code>rdd</code></li>
+<li><code>--tree_area</code> / <code>--tree_height</code> — a tree counts in T3 and Visibility only if its canopy area (m²) and height (m) are <em>strictly greater</em> than these (defaults 10 and 3)</li>
+<li><code>--vis_engine raster|vector</code> — Visibility engine (default <code>visibility.engine</code>, i.e. <code>raster</code>; see <a href="#tree-visibility-visibility-optional">Tree visibility</a>)</li>
+<li><code>--low_threshold</code> / <code>--high_threshold</code> — canopy-height band in metres for T30/T30_buildings binarisation (default 3–60)</li>
+<li><code>--gee_scale</code> — download resolution in metres for the T30/T30_buildings GEE canopy source (default <code>1.0</code>; raise to e.g. <code>10</code> for faster, lighter downloads over large regions — canopy is still thresholded at native resolution and each coarse pixel stores its canopy fraction, so cover stays unbiased)</li>
+<li><code>--composite max|median</code> — Spectral temporal composite (default <code>max</code>)</li>
+<li><code>--rule_t3_buffer</code>, <code>--rule_t3_metric</code>, <code>--rule_t30_buffer</code>, <code>--rule_distance</code> — how Merge evaluates the rule per building (see <a href="#merge-and-the-3-30-300-rule">Merge</a>)</li>
+</ul>
+<h2 id="canopy-cover-source-t30-t30_buildings">Canopy cover source (T30, T30_buildings)<a class="headerlink" href="#canopy-cover-source-t30-t30_buildings" title="Permanent link">&para;</a></h2>
+<p>T30 and T30_buildings pick their canopy source by what's configured, in priority order:</p>
+<ol>
+<li><strong>CHM raster tiles</strong> (<code>chm_tiles_dir</code>) — local <code>.tif</code> tiles, binarised to a canopy/no-canopy mask between <code>--low_threshold</code> and <code>--high_threshold</code> metres.</li>
+<li><strong>Meta/WRI canopy height from AWS</strong> (<code>meta_chm: v1</code> or <code>v2</code>) — the tiles covering the area are downloaded once from Meta's public bucket into the CHM cache (<code>data.chm_cache_dir</code>, else <code>$VERDANCE_CACHE_DIR</code>), cropped, binarised at native ~1 m resolution and reprojected to the config CRS; masks are cached under <code>&lt;base_dir&gt;/database/meta_canopy/</code>, named by geo code, release and height band.</li>
+</ol>
+<div class="highlight"><pre><span></span><code><span class="nt">data</span><span class="p">:</span>
+<span class="w">  </span><span class="nt">meta_chm</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">v2</span>
+</code></pre></div>
+<ul>
+<li><code>v1</code> — the original release (Tolan et al. 2024; <code>forests/v1/alsgedi_global_v6_float</code>, zoom-9 tiles of ~150–400 MB). The same data as the GEE asset below: over a 600 m Cambridge square, v1 from AWS gives 7.63 % cover and v1 through GEE 7.62 %. Like v2, v1 tiles declare <strong>no nodata</strong> — but v1 ships no imagery footprints, so there is nothing to mask with: unimaged pixels read 0 and count as mapped-but-treeless, which deflates cover wherever imagery is missing inside a unit (open water, gaps). Prefer <code>v2</code> where that matters.</li>
+<li><code>v2</code> — <code>forests/v2/global/dinov3_global_chm_v2_ml3</code> (zoom-10 tiles of ~20–250 MB, heights in whole metres). The same Cambridge square gives 12.78 %, so v1 and v2 results are not interchangeable. v2 tiles declare no nodata, so unimaged pixels (e.g. open sea) read 0 like bare ground; verdance masks pixels outside each tile's imagery footprints (<code>metadata/&lt;quadkey&gt;.geojson</code>) as nodata on download and keeps the footprints beside the tile. Footprints can include near-shore sea, which then still counts as no canopy — mostly relevant for T30_buildings buffers on the coast, since census units are usually clipped to the coastline. Imagery dates differ by area (e.g. 2011–2018 in one Norfolk tile); each run logs the range for the area it reads.</li>
+</ul>
+<p>Both releases are tiled in EPSG:3857 at 1.1943 units/pixel, so the <em>ground</em> sampling is <code>1.1943 × cos(latitude)</code> m — about 0.74 m at Cambridge's 52°N but 1.19 m near the equator. Cover itself stays unbiased (tiles are binarised at native resolution, then reprojected to the config's metric CRS, so the counted pixels are equal-area), but the same config resolves narrow crowns better at higher latitudes — worth keeping in mind when comparing cities at very different latitudes.</p>
+<p><code>meta_chm</code> also selects the release wherever the <code>meta</code> CHM source is read (<code>tree_segmentation.source: meta</code>, raster Visibility); unset, those use v1.
+3. <strong>GEE canopy-height asset</strong> (<code>canopy_height_ee_path</code>) — binarised <em>server-side</em> in Google Earth Engine and downloaded with <a href="https://github.com/google/Xee">xee</a>; no local canopy data required. Needs <code>gee_project</code> in the config. Example asset (global 1 m Meta/WRI canopy height):</p>
+<div class="highlight"><pre><span></span><code><span class="nt">data</span><span class="p">:</span>
+<span class="w">  </span><span class="nt">canopy_height_ee_path</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">projects/sat-io/open-datasets/facebook/meta-canopy-height</span>
+<span class="nt">gee_project</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">my-gee-project</span>
+</code></pre></div>
+<p>Downloaded rasters are cached under <code>&lt;base_dir&gt;/database/gee_canopy/</code>, named by geo code, height band and scale. At the native 1 m scale large regions can be slow — use <code>--gee_scale 10</code> to trade detail for speed: the mask is binarised at the native 1 m and averaged to canopy fraction per 10 m pixel server-side, so cover estimates stay consistent with 1 m runs.
+4. <strong>Tree polygons</strong> (<code>trees_dir</code>) — canopy cover as the area of the union of crowns clipped to each unit / unit area (a crown straddling two units counts only its own part in each; overlapping crowns are not double-counted); used when no raster or GEE source is set. Point trees fall back to their <code>tree_area</code> attribute.</p>
+<p>Where T30 reports canopy per sub-geo unit, <code>T30_buildings</code> reports it per building, within <code>--buffer</code> metres of each footprint (<code>--buffer 0</code> for the footprint alone). Raster sources run distributed through Sedona (<code>RS_TileExplode</code> + <code>RS_ZonalStats</code>), so large CHM tile sets scale across Spark workers; the vector source uses an <code>ST_Intersection</code> area ratio. CHM nodata pixels are excluded from <code>total_pixels</code> in both modules. Where CHM tiles overlap (e.g. several survey years), <code>data.chm_overlap</code> decides which heights are used — <code>latest</code> (default; the last path in sorted order, i.e. the latest year for <code>&lt;dir&gt;/&lt;year&gt;/</code> layouts) or <code>max</code> (per-pixel maximum) — in T30, T30_buildings and Trees alike; T30_buildings first composites overlapping tiles into non-overlapping chunks under the CHM cache, since it sums pixel counts per tile. One difference to keep in mind: T30_buildings counts every pixel <em>touching</em> a buffer while T30 counts pixels whose <em>centre</em> falls in the unit. CHM tiles are searched recursively under <code>chm_tiles_dir</code>, matching <code>data.chm_pattern</code> (default <code>*.tif</code>); Defra VOM hillshades (<code>VOM_HS_*</code>, stored beside every height tile) are always skipped. In <code>Merge</code>, per-building canopy is averaged up to the geo level as <code>building_canopy_cover_&lt;buffer&gt;m</code> (included automatically when T30_buildings output exists).</p>
+<h2 id="tree-segmentation-trees">Tree segmentation (Trees)<a class="headerlink" href="#tree-segmentation-trees" title="Permanent link">&para;</a></h2>
+<p><code>Trees</code> derives the crowns T3 counts from a canopy height model, so the "3" can be measured anywhere a CHM exists:</p>
+<div class="highlight"><pre><span></span><code>verdance<span class="w"> </span>run<span class="w"> </span>-c<span class="w"> </span>config.yaml<span class="w"> </span>-p<span class="w"> </span>Trees<span class="w"> </span>--parallel<span class="w"> </span>--n_workers<span class="w"> </span><span class="m">32</span><span class="w">   </span><span class="c1"># writes data.trees_dir/trees_&lt;geo_code&gt;.parquet</span>
+verdance<span class="w"> </span>run<span class="w"> </span>-c<span class="w"> </span>config.yaml<span class="w"> </span>-p<span class="w"> </span>T3<span class="w"> </span>--buffer<span class="w"> </span><span class="m">50</span>
+</code></pre></div>
+<p>The CHM is smoothed, treetops are found with a height-dependent circular local-maximum window, and crowns are grown from them with Dalponte &amp; Coomes (2016) region growing — a numpy/scipy port of the lidR pipeline used for the Defra VOM trees (<code>preset: legacy_vom</code> reproduces it: ~99.7 % of crowns match lidR one-to-one, at ~6× lidR's speed on one core). Large areas are processed in blocks with a halo, in parallel; a tree belongs to the block and geo code containing its treetop, so blocks and neighbouring geo codes never duplicate or cut trees.</p>
+<p>Sources (<code>tree_segmentation.source</code>): <code>chm_tiles</code> mosaics the tiles under <code>data.chm_tiles_dir</code> — where tiles overlap, e.g. several survey years, <code>data.chm_overlap: latest</code> keeps the last path in sorted order (the latest year for <code>&lt;dir&gt;/&lt;year&gt;/</code> layouts) and <code>max</code> takes the per-pixel maximum across them, so a tree seen in any survey counts (in London, Defra's December 2020 VOM shows canopy at 36–49 % of surveyed street trees vs 49–77 % in 2018; <code>max</code> raised the share of inventory trees visible in the CHM from 52 % to 77 %); <code>meta</code> downloads the <a href="https://registry.opendata.aws/dataforgood-fb-forests/">Meta/WRI global canopy height</a> tiles covering the area from AWS (release set by <code>data.meta_chm</code>, default v1: ~240 MB per zoom-9 tile; v2: ~20–250 MB per zoom-10 tile; cached) and segments them on their native grid, with lengths converted to ground metres.</p>
+<p>Presets (<code>tree_segmentation.preset</code>, individual values overridable under <code>params</code>) were tuned with <code>scripts/tune_tree_segmentation.py</code>, scoring only trees T3 would count (crown &gt; 10 m², height &gt; 3 m) against the London borough tree inventory (recall on surveyed trees visible in the CHM; precision inside surveyed crowns, since council inventories omit private trees) and NeonTreeEvaluation (full precision/recall), with London boroughs split into tuning and held-out sets. Held-out results:</p>
+<table>
+<thead>
+<tr>
+<th>Preset</th>
+<th>CHM</th>
+<th>London F1</th>
+<th>London recall</th>
+<th>NEON precision / recall</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>legacy_vom</code></td>
+<td>Defra VOM (<code>chm_overlap: max</code>)</td>
+<td>0.48</td>
+<td>0.32</td>
+<td>0.84 / 0.19</td>
+</tr>
+<tr>
+<td><code>vom</code></td>
+<td>Defra VOM (<code>chm_overlap: max</code>)</td>
+<td>0.58</td>
+<td>0.46</td>
+<td>0.87 / 0.46</td>
+</tr>
+<tr>
+<td><code>legacy_vom</code></td>
+<td>Meta</td>
+<td>0.41</td>
+<td>0.33</td>
+<td>—</td>
+</tr>
+<tr>
+<td><code>meta</code></td>
+<td>Meta</td>
+<td>0.48</td>
+<td>0.43</td>
+<td>—</td>
+</tr>
+</tbody>
+</table>
+<p>On an independent check — Cambridge City Council's 2024 inventory (20,779 trees, not used in tuning; <code>scripts/evaluate_trees_survey.py</code>) — <code>vom</code> raised the share of surveyed trees matched within 3 m from 34 % to 46 % (F1 0.56 → 0.68), while <code>meta</code> matched 23 %, little better than <code>legacy_vom</code> on Meta: the gain on Meta did not transfer beyond London.</p>
+<p>Meta's smoother, whole-metre heights still split about one surveyed crown in two, so expect its T3 counts to run higher than LiDAR's (over Cambridge: 147k vs 120k T3-eligible trees with the tuned presets).</p>
+<h2 id="building-heights-heights">Building heights (Heights)<a class="headerlink" href="#building-heights-heights" title="Permanent link">&para;</a></h2>
+<p>Visibility needs a height for every building. <code>Heights</code> attaches one from an ordered chain of sources — for each building the first source with a valid height wins (<code>heights.min_height</code>–<code>heights.max_height</code>, default 2–300 m), and buildings no source covers get <code>heights.default_height</code> (6 m), flagged <code>height_source: default</code>, so they still block views:</p>
+<div class="highlight"><pre><span></span><code><span class="nt">heights</span><span class="p">:</span>
+<span class="w">  </span><span class="nt">sources</span><span class="p">:</span><span class="w">                      </span><span class="c1"># first valid height wins</span>
+<span class="w">    </span><span class="p p-Indicator">-</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">native</span><span class="w">                    </span><span class="c1"># the footprints&#39; own height (Overture, OSM, columns.building_height_col),</span>
+<span class="w">                                </span><span class="c1">#   else floor count x storey_height (num_floors, or options levels_col)</span>
+<span class="w">    </span><span class="p p-Indicator">-</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">gba</span><span class="w">                       </span><span class="c1"># GlobalBuildingAtlas polygons</span>
+<span class="w">    </span><span class="p p-Indicator">-</span><span class="w"> </span><span class="p p-Indicator">{</span><span class="nt">source</span><span class="p">:</span><span class="w"> </span><span class="nv">utglobus</span><span class="p p-Indicator">,</span><span class="nt"> city</span><span class="p">:</span><span class="w"> </span><span class="nv">bogota</span><span class="p p-Indicator">}</span>
+<span class="w">    </span><span class="p p-Indicator">-</span><span class="w"> </span><span class="p p-Indicator">{</span><span class="nt">source</span><span class="p">:</span><span class="w"> </span><span class="nv">open_buildings_temporal</span><span class="p p-Indicator">,</span><span class="nt"> year</span><span class="p">:</span><span class="w"> </span><span class="nv">2023</span><span class="p p-Indicator">}</span>
+<span class="w">    </span><span class="p p-Indicator">-</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">ghs_built_h</span><span class="w">               </span><span class="c1"># coarse global fallback</span>
+<span class="w">    </span><span class="p p-Indicator">-</span><span class="w"> </span><span class="p p-Indicator">{</span><span class="nt">source</span><span class="p">:</span><span class="w"> </span><span class="nv">file</span><span class="p p-Indicator">,</span><span class="nt"> path</span><span class="p">:</span><span class="w"> </span><span class="nv">/data/ndsm.tif</span><span class="p p-Indicator">,</span><span class="nt"> stat</span><span class="p">:</span><span class="w"> </span><span class="nv">median</span><span class="p p-Indicator">,</span><span class="nt"> name</span><span class="p">:</span><span class="w"> </span><span class="nv">lidar</span><span class="p p-Indicator">}</span>
+<span class="w">  </span><span class="nt">default_height</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">6.0</span>
+<span class="w">  </span><span class="nt">storey_height</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">3.0</span><span class="w">            </span><span class="c1"># metres per floor, also Visibility&#39;s floor spacing</span>
+<span class="w">  </span><span class="nt">min_overlap</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">0.3</span><span class="w">              </span><span class="c1"># vector sources: share of the footprint they must cover</span>
+</code></pre></div>
+<p>The sources themselves, with their coverage and licences, are listed under <a href="../data-sources/#building-height-sources">data sources</a>.</p>
+<p>Vector sources lend each footprint the area-weighted height of the source polygons covering it (so a block the source splits into several buildings still matches), when they cover at least <code>min_overlap</code> of it. Raster sources give the median (GHS: mean) of the pixels whose centre lies inside the footprint, or of every touched pixel for footprints smaller than a pixel; GHS cells are sampled on a 10 m grid so the mean approximates an area-weighted mean. Remote sources come through Google Earth Engine (<code>gee_project</code>) and are cached under the CHM cache directory (<code>data.chm_cache_dir</code>, else <code>$VERDANCE_CACHE_DIR</code>): rasters as tiles aligned to a fixed grid, polygons as small lon/lat chunks, so reruns and neighbouring study areas reuse them. Each source's heights are cached per source (<code>database/heights/</code>), and the combined table is <code>database/building_heights_&lt;key&gt;.parquet</code>, keyed by the chain and the buildings cache — a new chain builds a new table rather than reusing a stale one. The run logs the share of buildings each source supplied.</p>
+<p><code>scripts/evaluate_heights.py</code> compares the cached sources against reference heights. Against Verisk heights in Cambridge (45,719 buildings; <code>--levels_col premise_floor_count</code>):</p>
+<table>
+<thead>
+<tr>
+<th>Source</th>
+<th>Coverage</th>
+<th>MAE (m)</th>
+<th>Bias (m)</th>
+<th>Spearman</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>ghs_built_h</code></td>
+<td>95 %</td>
+<td>3.3</td>
+<td>−2.9</td>
+<td>0.29</td>
+</tr>
+<tr>
+<td><code>gba</code></td>
+<td>89 %</td>
+<td>4.1</td>
+<td>−3.9</td>
+<td>0.38</td>
+</tr>
+<tr>
+<td>floor count × 3 m</td>
+<td>99 %</td>
+<td>2.6</td>
+<td>−2.5</td>
+<td>0.30</td>
+</tr>
+</tbody>
+</table>
+<p>Both global datasets run 3–4 m below Verisk, whose two-storey median of 8.9 m suggests it measures to the roof ridge, and rank buildings only weakly. Over Bogotá's 2.17 M Overture footprints the chain above took heights from GBA for 81 %, Open Buildings Temporal 10 %, GHS-BUILT-H 4 %, UT-GLOBUS 1 % and Overture 0.1 %, leaving 4 % at the default (16 min, 8 GB peak memory).</p>
+<h2 id="tree-visibility-visibility-optional">Tree visibility (Visibility, optional)<a class="headerlink" href="#tree-visibility-visibility-optional" title="Permanent link">&para;</a></h2>
+<p>Where T3 counts trees <em>near</em> a building, <code>Visibility</code> counts the ones that can be <em>seen</em> from it. It looks from the windows: observer points every <code>visibility.facade_spacing</code> metres (5) around each footprint, <code>facade_offset</code> (0.5 m) outside the wall, at the eye height of every floor (<code>floor i: i × heights.storey_height + eye_height</code>, 1.5 m up; at least one floor). Walls shared with a neighbour (terraced houses) have no windows. It looks at each tree's treetop (<code>top_x</code>, <code>top_y</code> from <code>Trees</code>, else a point inside the crown) and <code>crown_points</code> (4) points on its crown at <code>crown_point_height</code> (2/3) of its height. A tree is visible when some window sees some target point over every obstacle — every building, the observer's own included, at its <code>Heights</code> height, and the vegetation — as flat-topped prisms on flat ground (grazing contact blocks). Inside the target tree's own crown only buildings block, so a tree never hides itself, nor do crowns overlapping it. The candidates are the trees T3 counts — centroid within <code>--buffer</code> m, above <code>--tree_area</code>/<code>--tree_height</code> — with the distance measured exactly, whereas T3's polygonal <code>ST_Buffer</code> trims up to ~2 % of the radius at the corners, so <code>candidate_trees</code> can exceed <code>tree_count_&lt;b&gt;m</code> by a tree or two (3 % of Bogotá's buildings at 50 m, 11 % at 100 m). Smaller trees still block views.</p>
+<p>Since visibility only improves with height, each building–tree pair reduces to the lowest eye height from which the tree is visible. Per building the output has <code>visible_trees</code> (seen from some floor), <code>visible_trees_ground</code> (from the ground floor), <code>candidate_trees</code> (T3's count), <code>n_floors</code>, <code>building_height</code> and <code>height_source</code>.</p>
+<p>Two engines share these definitions:</p>
+<ul>
+<li><strong><code>raster</code></strong> (default) — casts the sightlines over a surface model on a <code>visibility.resolution</code> grid (1 m): buildings burned at their heights plus the vegetation, which is the canopy height model when one is configured (<code>data.chm_tiles_dir</code> or <code>tree_segmentation.source</code>; Meta's CHM is cleared on roofs, <code>mask_chm_buildings</code>) and the tree crowns at their heights otherwise (<code>vegetation: auto|chm|crowns</code>). A numba kernel visits every pixel each sightline crosses, in parallel (<code>--parallel --n_workers N</code> sets the threads, default 16); buildings are processed in <code>tile_size</code> tiles (2 km). It needs no Spark. Edges are only as sharp as the grid: a sightline that clips a building corner by less than a pixel may be judged differently from exact geometry (set <code>resolution: 0.5</code> to tighten).</li>
+<li><strong><code>vector</code></strong> (<code>--vis_engine vector</code>) — the exact computation in Sedona SQL, intersecting every sightline with every footprint and crown polygon; a reference for small areas, writing <code>Visibility_vector/</code> so Merge never mixes engines. On the synthetic city both engines agree on 47 of 48 buildings (the other differs by one ground-floor tree, a sightline grazing a building corner); on three Cambridge output areas (312 buildings) they agree on <code>meets_3</code> for 99.7 % of buildings, with the raster engine seeing 2.5 % fewer trees on average, at ~1 s per area against ~50 s.</li>
+</ul>
+<p>Building heights come from the <code>Heights</code> chain (built on the first Visibility run when missing) and tree heights from <code>tree_height_col</code>. Visibility needs crowns in <code>data.trees_dir</code>, and by default reads terrain from Earth Engine (below): set <code>terrain.source: null</code> for flat ground without GEE.</p>
+<p><strong>Terrain.</strong> The raster engine stands everything on the ground: buildings sit flat at the ground under their representative point plus their height, vegetation on the ground, windows and targets on the ground under them (floors stay relative to it), and the bare ground itself — a hill, a ridge — blocks sightlines. The ground comes from <code>terrain.source</code>:</p>
+<div class="highlight"><pre><span></span><code><span class="nt">terrain</span><span class="p">:</span>
+<span class="w">  </span><span class="nt">source</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">fabdem</span><span class="w">      </span><span class="c1"># fabdem (default) | copernicus | nasadem | /path/to/dtm.tif or directory | null (flat)</span>
+<span class="w">  </span><span class="nt">resolution</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">30</span><span class="w">      </span><span class="c1"># GEE download resolution (m), resampled bilinearly onto the visibility grid</span>
+</code></pre></div>
+<p>The terrain sources and their licences are listed under <a href="../data-sources/#terrain-sources">data sources</a>.</p>
+<p>Use a bare-earth model: surface models already contain rooftops and canopy in cities, so building and tree heights would be counted twice (in central Bogotá Copernicus reads 8 m above FABDEM). DEM tiles are cached under the CHM cache directory. The vector engine always assumes flat ground. In Cambridge (flat) terrain changed the visible-tree count of 1.2 % of buildings and <code>meets_3</code> for 12 of 45,682.</p>
+<p><strong>Study-area edges.</strong> <code>context_buffer</code> (default 100 m, a top-level key; 0 disables) gathers context in a ring around the study area, so edge buildings are judged like any other:</p>
+<ul>
+<li><em>Buildings</em> — with a remote building source (<code>osm</code>, <code>overture</code>, <code>open_buildings</code>) the ring's footprints are fetched once into <code>database/context_buildings.parquet</code>. They get heights from the Heights chain and block views, but belong to no unit, so they are never observers and appear in no output. A building file is used whole, so extend it past the study area to cover the ring.</li>
+<li><em>Trees</em> — a full <code>-p Trees</code> run also segments the ring into <code>trees_context.parquet</code> (<code>--geo_code context</code> does only the ring, e.g. for an existing run), so trees just across the boundary count for edge buildings in T3 and Visibility; Tree_count and T30 still count only trees inside each unit. A tree file is used whole.</li>
+<li>The canopy height model and the DEM are read past the boundary anyway.</li>
+</ul>
+<p>First results (raster engine, 16 threads):</p>
+<table>
+<thead>
+<tr>
+<th>Study area</th>
+<th>Buffer</th>
+<th>Run time</th>
+<th>Candidates</th>
+<th>Visible (ground floor)</th>
+<th>Meets 3: proximity → visibility</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Cambridge — 45,682 buildings, Verisk heights, VOM crowns</td>
+<td>50 m</td>
+<td>1.5 min</td>
+<td>16.9</td>
+<td>11.0 (9.9)</td>
+<td>96.9 % → 92.2 %</td>
+</tr>
+<tr>
+<td></td>
+<td>100 m</td>
+<td>1.8 min</td>
+<td>62.8</td>
+<td>21.9 (17.1)</td>
+<td>99.5 % → 97.2 %</td>
+</tr>
+<tr>
+<td>Cambridge, GBA heights instead</td>
+<td>50 m</td>
+<td>1.6 min</td>
+<td>16.9</td>
+<td>10.8 (10.3)</td>
+<td>96.9 % → 93.0 %</td>
+</tr>
+<tr>
+<td>Bogotá — 2.17 M buildings, global heights, Meta CHM</td>
+<td>50 m</td>
+<td>8 min</td>
+<td>4.7</td>
+<td>1.2 (1.0)</td>
+<td>28.9 % → 10.7 %</td>
+</tr>
+<tr>
+<td></td>
+<td>100 m</td>
+<td>9 min</td>
+<td>20.9</td>
+<td>2.8 (2.1)</td>
+<td>60.7 % → 17.5 %</td>
+</tr>
+</tbody>
+</table>
+<p>These runs used flat ground and no context ring. With FABDEM terrain and the 100 m ring (210 k ring trees, 10.6 k ring buildings), Bogotá took 13 min per buffer; the share meeting the 3 by visibility barely moved (10.7 % → 10.7 % at 50 m, 17.5 % → 17.6 % at 100 m) — most of the city sits on the flat Sabana — but terrain changed the visible-tree count of 27–34 % of buildings on the eastern hillsides (Chapinero, La Candelaria, Santa Fe) against 6–8 % on the plain, and the ring added candidates for 0.3 % (50 m) and 0.9 % (100 m) of buildings. Rerunning T3 with the ring trees raised the count of 6,328 edge buildings at 50 m (the share meeting the 3 by proximity went from 28.9 % to 29.0 %). After Merge, 0.2 % of Bogotá's buildings meet 3-30-300 with 3 = trees nearby and 0.1 % with 3 = trees in view — the 30 is the binding criterion (0.3 % of buildings have 30 % canopy within 100 m) — and per UPZ 21–36 % of the trees within 50 m of a building are in view from it (10–19 % within 100 m). Peak memory was 0.6 GB (Cambridge) and 4.3 GB (Bogotá). Swapping Verisk for GBA heights in Cambridge changed <code>meets_3</code> for 1.6 % of buildings. Where vegetation comes from the CHM, every canopy pixel blocks — street trees hide each other — so a smaller share of the candidates is visible than with crown polygons.</p>
+<h2 id="merge-and-the-3-30-300-rule">Merge and the 3-30-300 rule<a class="headerlink" href="#merge-and-the-3-30-300-rule" title="Permanent link">&para;</a></h2>
+<p><code>Merge</code> accepts <code>--t3_buffers</code>, repeated once per buffer (e.g. <code>--t3_buffers 50 --t3_buffers 100</code>; default 10, 25, 50, 75 and 100), and combines whichever T3 buffer runs exist; Spectral, T30_buildings and Visibility outputs are included only if present. It aggregates to <code>--geo_level</code>, which for Merge defaults to the <strong>second-finest</strong> level of <code>columns.geo_levels</code> (the finest with a DGGS), reading sub-geo results at <code>--sub_geo_level</code> (default: finest).</p>
+<p>Per unit it reports means — <code>tree_count_&lt;b&gt;m</code>, <code>canopy_cover</code> (area-weighted), <code>park_distance_manhattan</code> (road network) and <code>park_distance_euclidean</code>, plus <code>building_canopy_cover_&lt;b&gt;m</code>, <code>visible_trees_&lt;b&gt;m</code> and <code>visible_trees_ground_&lt;b&gt;m</code> when available — and <code>total_trees</code>. With Visibility it also reports <code>share_visible_&lt;b&gt;m</code>: the % of the unit's building–tree pairs within the buffer where the tree is in view (Σ visible ÷ Σ candidates).</p>
+<p>Because the rule is a test every home should pass, Merge also evaluates it <strong>per building</strong> and writes <code>database/T3_30_300_buildings.parquet</code> with <code>meets_3</code>, <code>meets_30</code>, <code>meets_300</code> and <code>meets_3_30_300</code>. The per-unit table gains <code>pct_meets_3</code>, <code>pct_meets_30</code>, <code>pct_meets_300</code> and <code>pct_meets_3_30_300</code> (% of buildings passing):</p>
+<ul>
+<li><strong>3</strong> — at least 3 trees within <code>--rule_t3_buffer</code> metres (default <code>50</code>): counted by T3 (<code>--rule_t3_metric proximity</code>, the default) or visible from some floor (<code>--rule_t3_metric visibility</code>, needs Visibility at that buffer). Whenever both outputs exist the table keeps <code>meets_3_proximity</code> and <code>meets_3_visibility</code> beside <code>meets_3</code>, and the combined rule under each, <code>meets_3_30_300_proximity</code> and <code>meets_3_30_300_visibility</code> (with <code>pct_</code> of all four per unit), and the parquet's <code>verdance_rule</code> metadata records which metric and columns the rule used</li>
+<li><strong>30</strong> — canopy cover of the building's sub-geo unit (the neighbourhood reading of the rule) is ≥ 30 %; with <code>--rule_t30_buffer N</code>, T30_buildings canopy within N metres of the building instead</li>
+<li><strong>300</strong> — distance to the nearest park is ≤ 300 m, straight-line by default (<code>--rule_distance euclidean</code>, as in the WHO guideline) or <code>network</code></li>
+</ul>
+<p>A criterion with missing input is left null and excluded from that percentage; the combined rule is only evaluated where all three are known. T3 and Visibility counts are proxies for "seeing" trees: T3 counts trees near the building, Visibility checks line of sight.</p>
+<h2 id="per-building-outputs">Per-building outputs<a class="headerlink" href="#per-building-outputs" title="Permanent link">&para;</a></h2>
+<p>Each building belongs to exactly one census unit — the one containing its representative point — and is output only by that unit's run, including buildings that straddle unit boundaries. Buildings whose representative point lies outside every unit are skipped. T3's default <code>sql</code> query path returns a row for every building, with <code>tree_count</code> 0 where no tree is in the buffer; <code>--query_method rdd</code> omits those buildings instead, and Merge fills them with 0. T300 keeps every building: with no reachable park within <code>osm.fetch_buffer</code> (default 2 km) its distances are null.</p>
+
+
+
+
+
+
+
+
+
+
+
+
+                
+              </article>
+            </div>
+          
+          
+<script>var target=document.getElementById(location.hash.slice(1));target&&target.name&&(target.checked=target.name.startsWith("__tabbed_"))</script>
+        </div>
+        
+          <button type="button" class="md-top md-icon" data-md-component="top" hidden>
+  
+  <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M13 20h-2V8l-5.5 5.5-1.42-1.42L12 4.16l7.92 7.92-1.42 1.42L13 8z"/></svg>
+  Back to top
+</button>
+        
+      </main>
+      
+        <footer class="md-footer">
+  
+  <div class="md-footer-meta md-typeset">
+    <div class="md-footer-meta__inner md-grid">
+      <div class="md-copyright">
+  
+  
+    Made with
+    <a href="https://squidfunk.github.io/mkdocs-material/" target="_blank" rel="noopener">
+      Material for MkDocs
+    </a>
+  
+</div>
+      
+    </div>
+  </div>
+</footer>
+      
+    </div>
+    <div class="md-dialog" data-md-component="dialog">
+      <div class="md-dialog__inner md-typeset"></div>
+    </div>
+    
+    
+    
+      
+      
+      <script id="__config" type="application/json">{"annotate": null, "base": "..", "features": ["navigation.sections", "navigation.top", "navigation.indexes", "content.code.copy"], "search": "../assets/javascripts/workers/search.2c215733.min.js", "tags": null, "translations": {"clipboard.copied": "Copied to clipboard", "clipboard.copy": "Copy to clipboard", "search.result.more.one": "1 more on this page", "search.result.more.other": "# more on this page", "search.result.none": "No matching documents", "search.result.one": "1 matching document", "search.result.other": "# matching documents", "search.result.placeholder": "Type to start searching", "search.result.term.missing": "Missing", "select.version": "Select version"}, "version": null}</script>
+    
+    
+      <script src="../assets/javascripts/bundle.d7400e89.min.js"></script>
+      
+    
+  </body>
+</html>
