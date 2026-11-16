@@ -11,11 +11,31 @@ exclude_docs: |
 
 theme:
   name: material
+  logo: assets/logos/verdance-icon-mono-inverse.svg
+  favicon: assets/logos/verdance-icon-light.svg
+  palette:
+    - media: "(prefers-color-scheme: light)"
+      scheme: default
+      primary: custom
+      accent: custom
+      toggle:
+        icon: material/brightness-7
+        name: Switch to dark mode
+    - media: "(prefers-color-scheme: dark)"
+      scheme: slate
+      primary: custom
+      accent: custom
+      toggle:
+        icon: material/brightness-4
+        name: Switch to light mode
   features:
     - navigation.sections
     - navigation.top
     - navigation.indexes
     - content.code.copy
+
+extra_css:
+  - assets/stylesheets/verdance.css
 
 markdown_extensions:
   - admonition
@@ -45,6 +65,8 @@ plugins:
 
 nav:
   - Home: index.md
+  - Installation: installation.md
+  - Quick start: quickstart.md
   - Configuration: configuration.md
   - Modules: modules.md
   - Data sources: data-sources.md
