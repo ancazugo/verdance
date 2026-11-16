@@ -36,6 +36,11 @@ def _reject_unknown(section: dict, valid: set[str], where: str) -> None:
 
 
 def load_config(path: str | Path) -> VerdanceConfig:
+    """Load and validate a verdance YAML config into a `VerdanceConfig`.
+
+    Unknown keys, missing required sections and a geographic `crs` are rejected
+    here rather than part-way through a long Spark run.
+    """
     with open(path) as f:
         raw = yaml.safe_load(f)
 
